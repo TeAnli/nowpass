@@ -88,7 +88,7 @@ token 为登录接口返回的 32 位字符串（Redis 会话键的一部分）�
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
-| GET | `/api/questions` | 题目分页列表。筛选：`categoryId`、`difficulty`(easy/medium/hard)、`keyword`(标题模糊)、`tag`。**不含题干与答案** |
+| GET | `/api/questions` | 题目分页列表。筛选：`categoryId`、`difficulty`(easy/medium/hard)、`keyword`(标题模糊)、`tag`；排序 `sort` 取 `latest`（默认）/ `hot` / `oldest` / `title`。列表项含浏览量 `viewCount`，**不含题干与答案** |
 | GET | `/api/questions/{id}` | 题目详情：含题干 `contentMd` 与选项 `options`，**不含标准答案** |
 | GET | `/api/questions/{id}/answer` | 标准答案：`answerMd` + `answerKey`，独立接口 |
 | GET | `/api/categories` | 分类列表，含 `questionCount` |
@@ -96,6 +96,8 @@ token 为登录接口返回的 32 位字符串（Redis 会话键的一部分）�
 | PUT | `/api/user/password` | 修改密码；成功后**全部会话失效** |
 
 > v1 不支持用户自行修改邮箱：改邮箱需要再来一次邮箱验证流程，收益低于成本。
+>
+> `sort=hot` 按 `view_count desc, id desc` 排序；打开题目详情时 `view_count` 自增，用于“热门面试题”。
 
 ## 4. 后台接口（需登录 + 权限点）
 

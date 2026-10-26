@@ -13,6 +13,30 @@
 - M4：接口联调与文档
 - 前端（React + Ant Design）
 
+## [0.1.4] - 2026-10-26
+
+### 新增
+- `nowpass-framework` 框架层：
+  - `ExposedConfig`：`SpringTransactionManager` 接管 Spring 事务，**不开启自动建表**（表结构由 Flyway 独占）
+  - `NowPassProperties`：`nowpass.token / mail / register / login / init` 全部可配
+  - 有状态会话：`TokenService`（Redis 存 `LoginUser`、滑动续期、按用户批量清会话、SCAN 枚举在线用户）、`AuthTokenFilter`、`SecurityUtils`
+  - `RolePermissions`：角色→权限点映射（superadmin / admin / user 三档，权限点写在代码里）
+  - `SecurityConfig`：无状态、关闭 CSRF（不用 cookie）、`/api` 需登录、匿名白名单、401/403 返回统一 JSON
+  - `CaptchaService` + `ArithmeticGenerator`：算术图形验证码，答案存 Redis 2 分钟、一次性
+  - `RedisRateLimiter` + `RateLimiterAspect`：Lua 原子计数的固定窗口限流
+  - `OperLogAspect`：`@Log` 落库，参数/结果截断 2000 字符，记录失败不影响主流程
+  - 邮件可插拔：`EmailService` 接口 + `SmtpEmailService`（`nowpass.mail.enabled=true`）/ `NoopEmailService`（默认，验证码写日志）
+  - `EmailCodeService`：6 位验证码、5 分钟、一次性
+  - `AuthService`：登录（验证码→锁定→密码→状态 的固定校验顺序）、注册（邮箱验证码 + 待审批）、找回密码（改密后清空全部会话）、改密
+  - `AdminInitializer`：`ApplicationRunner` 幂等创建超级管理员（避开 Flyway 里写 BCrypt 哈希）
+  - `GlobalExceptionHandler`：业务错误返 200 + 业务码，鉴权/参数/系统错误返对应 HTTP 状态
+
+### 修复（踩坑记录）
+- hutool `CodeGenerator.verify` 是**两参数**(`code`, `userInputCode`)，不是一参数
+- **Kotlin 块注释可嵌套**：KDoc 里写 `/api/**` 会开启新注释，导致 "Unclosed comment"，注释中需避免双星号路径
+- `SecurityUtils` 用 `?: return null` 取值时不要显式标注可空类型，否则智能转换失效
+- hutool 图片 base64 用属性访问 `captcha.imageBase64Data`（不是方法调用）
+
 ## [0.1.3] - 2026-10-26
 
 ### 新增

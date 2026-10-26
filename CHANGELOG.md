@@ -13,6 +13,28 @@
 - M4：接口联调与文档
 - 前端（React + Ant Design）
 
+## [0.1.3] - 2026-10-26
+
+### 新增
+- `nowpass-system` 领域层完成（领域模型 + DAO + Service）：
+  - 表定义：`SysUserTable` / `SysRoleTable` / `SysUserRoleTable` / `QuestionCategoryTable` / `QuestionTable` / `SysOperLogTable`
+  - 领域模型与 DTO：显式区分「列表项（不含长文本）」「详情（不含答案）」「标准答案」，答案只能经独立方法取得
+  - DAO：`SysUserDao` / `SysRoleDao` / `QuestionDao` / `QuestionCategoryDao` / `OperLogDao`
+  - Service：`SysUserService` / `QuestionService` / `QuestionCategoryService` / `OperLogService`
+  - 查询条件：`UserPageQuery` / `QuestionPageQuery` / `OperLogPageQuery`
+- 业务校验前置：选择题必须同时有选项与答案键、答案键必须落在选项范围内；分类下仍有题目时拒绝删除分类
+
+### 修复（Exposed 1.6 迁移踩坑记录）
+- `Table.options` 是 Exposed 自带成员，`jsonb` 列属性不能命名为 `options`，改名为 `optionJson`（列名仍为 `options`）
+- Exposed 1.6 的 `and` / `andWhere` 分属 `v1.core` 与 `v1.jdbc` 两个包，必须分别 import
+- `@Max` / `@Min` 注解参数类型是 `Long`，Kotlin `Int` 常量需显式 `.toLong()`
+
+### 变更
+- `PageQuery` 从构造器参数改为 JavaBean 风格（`var` + setter 内做范围收敛），因为 Spring `@ModelAttribute` 对 Kotlin 构造器绑定不可靠
+
+### 未决
+- 标签筛选暂用 PostgreSQL `tags @> array[?]` 原生查询取 id 集合（Exposed 无数组包含 DSL），走 GIN 索引，代价可接受
+
 ## [0.1.2] - 2026-10-26
 
 ### 新增

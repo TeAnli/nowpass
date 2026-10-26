@@ -13,6 +13,25 @@
 - M4：接口联调与文档
 - 前端（React + Ant Design）
 
+## [0.1.6] - 2026-10-26
+
+### 新增
+- `http/nowpass.http`：36 个请求的接口调试集（自动捕获 captcha uuid 与登录 token）
+- 后端文档集补齐：
+  - `docs/02-architecture.md`：模块依赖方向、请求处理链路、分层职责、关键取舍
+  - `docs/04-api.md`：全部接口、认证约定、HTTP 状态与业务码分工、错误码表
+  - `docs/05-development.md`：启动步骤、端口一览、常用运维命令、迁移约定、踩坑记录、升级路径
+- 单元测试（10 个，`:nowpass-framework:test` 全绿）：
+  - `ArithmeticGeneratorTest`：算式格式、答案正确性、减法非负、校验忽略空格
+  - `RolePermissionsTest`：普通用户零权限、admin 无危险操作、超管全量、多角色并集、未知角色
+
+### 变更
+- README / 数据库文档同步端口调整（应用 18090、PostgreSQL 5434）
+
+### 验证
+- `./gradlew build` BUILD SUCCESSFUL（含 10 个单测）
+- 后端接口全部实测通过，详见 0.1.5 的 E2E 结论
+
 ## [0.1.5] - 2026-10-26
 
 ### 新增

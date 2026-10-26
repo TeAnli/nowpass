@@ -1,0 +1,249 @@
+### NowPass 后端接口调试集（IntelliJ HTTP Client / VS Code REST Client）
+### 用法：先执行「获取验证码」与「登录」，token 会自动写入全局变量。
+### 本地图形验证码的答案存在 Redis 里，联调时可用：
+###   docker exec nowpass-redis redis-cli get "captcha:<uuid>"
+
+@base = http://127.0.0.1:18090
+@adminUser = admin
+@adminPass = Admin@123456
+
+### 1) 获取图形验证码
+# @name captcha
+GET {{base}}/api/auth/captcha
+
+> {%
+    client.global.set("captchaUuid", response.body.data.uuid);
+    client.log("captcha uuid = " + response.body.data.uuid);
+%}
+
+### 2) 登录（把 captchaCode 换成 Redis 里取到的答案）
+# @name login
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "{{adminUser}}",
+  "password": "{{adminPass}}",
+  "captchaUuid": "{{captchaUuid}}",
+  "captchaCode": "REPLACE_WITH_REDIS_ANSWER"
+}
+
+> {%
+    client.global.set("token", response.body.data.token);
+    client.log("token = " + response.body.data.token);
+%}
+
+### 3) 当前登录用户
+GET {{base}}/api/auth/me
+Authorization: Bearer {{token}}
+
+### 4) 题目分页（筛选：分类 / 难度 / 标签 / 关键词）
+GET {{base}}/api/questions?page=1&pageSize=10&difficulty=medium&tag=jvm&keyword=HashMap
+Authorization: Bearer {{token}}
+
+### 5) 题目详情（不含标准答案）
+GET {{base}}/api/questions/2
+Authorization: Bearer {{token}}
+
+### 6) 标准答案（独立接口）
+GET {{base}}/api/questions/2/answer
+Authorization: Bearer {{token}}
+
+### 7) 分类列表（含题目数）
+GET {{base}}/api/categories
+Authorization: Bearer {{token}}
+
+### 8) 发送注册邮箱验证码（需先获取 captcha）
+POST {{base}}/api/auth/email-code
+Content-Type: application/json
+
+{
+  "email": "someone@example.com",
+  "scene": "register",
+  "captchaUuid": "{{captchaUuid}}",
+  "captchaCode": "REPLACE_WITH_REDIS_ANSWER"
+}
+
+### 9) 注册（邮箱验证码；注册后为 pending 需管理员审批）
+POST {{base}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "tester01",
+  "password": "Tester@123456",
+  "nickname": "测试用户",
+  "email": "someone@example.com",
+  "emailCode": "123456"
+}
+
+### 10) 找回密码
+POST {{base}}/api/auth/reset-password
+Content-Type: application/json
+
+{
+  "email": "someone@example.com",
+  "emailCode": "123456",
+  "newPassword": "Fresh@123456"
+}
+
+### 11) 修改昵称
+PUT {{base}}/api/user/profile
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "nickname": "新昵称"
+}
+
+### 12) 修改密码（成功后全部会话失效）
+PUT {{base}}/api/user/password
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "oldPassword": "Admin@123456",
+  "newPassword": "Admin@1234567"
+}
+
+### ============ 后台接口（需 admin / superadmin） ============
+
+### 20) 后台题目列表
+GET {{base}}/api/admin/questions?page=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### 21) 新增题目（简答题）
+POST {{base}}/api/admin/questions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "categoryId": 5,
+  "difficulty": "easy",
+  "title": "Kotlin 中 val 与 var 的区别？",
+  "contentMd": "请说明 `val` 与 `var` 的区别。",
+  "answerMd": "`val` 是只读引用，`var` 是可变引用；`val` 不代表对象不可变。",
+  "options": null,
+  "answerKey": null,
+  "tags": ["kotlin", "语法"]
+}
+
+### 22) 新增题目（选择题，选项与答案键必须成对）
+POST {{base}}/api/admin/questions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "categoryId": 5,
+  "difficulty": "easy",
+  "title": "Kotlin 中哪个关键字声明只读引用？",
+  "contentMd": "选出正确项。",
+  "answerMd": "**A**。`val` 声明只读引用。",
+  "options": [
+    { "key": "A", "text": "val" },
+    { "key": "B", "text": "var" },
+    { "key": "C", "text": "const" }
+  ],
+  "answerKey": "A",
+  "tags": ["kotlin"]
+}
+
+### 23) 编辑题目
+PUT {{base}}/api/admin/questions/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "categoryId": 1,
+  "difficulty": "medium",
+  "title": "== 和 equals() 的区别是什么？（已修订）",
+  "contentMd": "题干",
+  "answerMd": "答案",
+  "options": null,
+  "answerKey": null,
+  "tags": ["java"]
+}
+
+### 24) 删除题目（逻辑删除）
+DELETE {{base}}/api/admin/questions/1
+Authorization: Bearer {{token}}
+
+### 25) 分类管理
+GET {{base}}/api/admin/categories
+Authorization: Bearer {{token}}
+
+###
+POST {{base}}/api/admin/categories
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "新分类",
+  "sort": 99
+}
+
+### 26) 用户列表（status=pending 即待审批）
+GET {{base}}/api/admin/users?page=1&pageSize=10&status=pending
+Authorization: Bearer {{token}}
+
+### 27) 管理员建号
+POST {{base}}/api/admin/users
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "username": "u_by_admin",
+  "password": "Abcd123456",
+  "nickname": "后台建的号",
+  "email": "u_by_admin@example.com",
+  "roleKey": "user"
+}
+
+### 28) 审批 / 停用
+PUT {{base}}/api/admin/users/2/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "status": "active"
+}
+
+### 29) 改角色
+PUT {{base}}/api/admin/users/2/role
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "roleKey": "admin"
+}
+
+### 30) 重置用户密码
+PUT {{base}}/api/admin/users/2/reset-password
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "newPassword": "NewPass123456"
+}
+
+### 31) 删除用户
+DELETE {{base}}/api/admin/users/2
+Authorization: Bearer {{token}}
+
+### 32) 在线会话
+GET {{base}}/api/admin/online
+Authorization: Bearer {{token}}
+
+### 33) 强制下线
+DELETE {{base}}/api/admin/online/REPLACE_WITH_TOKEN_ID
+Authorization: Bearer {{token}}
+
+### 34) 操作日志
+GET {{base}}/api/admin/oper-logs?page=1&pageSize=20
+Authorization: Bearer {{token}}
+
+### 35) 登出
+POST {{base}}/api/auth/logout
+Authorization: Bearer {{token}}
+
+### 36) OpenAPI JSON（无需登录）
+GET {{base}}/v3/api-docs

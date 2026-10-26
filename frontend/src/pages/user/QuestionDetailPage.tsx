@@ -1,13 +1,14 @@
-import { useMemo, useState } from 'react'
-import { Alert, Button, Drawer, Skeleton, Tag } from 'antd'
-import { ArrowLeftOutlined, CheckOutlined, CloseOutlined, LockOutlined } from '@ant-design/icons'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Button, Drawer, Skeleton, Tag } from 'antd'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { catalogApi } from '@/api/catalog'
+import { AppIcon } from '@/components/AppIcon'
 import { DifficultyBadge } from '@/components/DifficultyBadge'
 import { ErrorState } from '@/components/ErrorState'
 import { MarkdownView } from '@/components/MarkdownView'
 import { useIsMobile } from '@/hooks/useIsMobile'
+import { animateIn, canAnimate } from '@/lib/gsap'
 
 function AnswerBody({ questionId }: { questionId: number }) {
   const answer = useQuery({
@@ -44,7 +45,7 @@ function AnswerHeader({ onClose }: { onClose: () => void }) {
         <p className="eyebrow">ANSWER NOTE / 附页</p>
         <h2 id="answer-title">标准答案</h2>
       </div>
-      <Button type="text" aria-label="收起标准答案" icon={<CloseOutlined />} onClick={onClose} />
+      <Button type="text" aria-label="收起标准答案" icon={<AppIcon icon="lucide:x" size={18} />} onClick={onClose} />
     </div>
   )
 }
@@ -56,6 +57,7 @@ export function QuestionDetailPage() {
   const isMobile = useIsMobile('(max-width: 900px)')
   const [revealed, setRevealed] = useState(false)
   const [selected, setSelected] = useState<Set<string>>(new Set())
+  const answerPanelRef = useRef<HTMLElement | null>(null)
 
   const question = useQuery({
     queryKey: ['question', questionId],
@@ -67,6 +69,20 @@ export function QuestionDetailPage() {
     const state = location.state as { from?: string } | null
     return state?.from && state.from.startsWith('/') ? state.from : '/'
   }, [location.state])
+
+  useEffect(() => {
+    if (!revealed || isMobile) return
+    const element = answerPanelRef.current
+    if (!element || !canAnimate()) return
+    const tween = animateIn(element, { y: 24, duration: 0.42, ease: 'power3.out' })
+    const timer = window.setTimeout(() => {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 80)
+    return () => {
+      window.clearTimeout(timer)
+      tween.kill()
+    }
+  }, [isMobile, revealed])
 
   if (!Number.isFinite(questionId) || questionId <= 0) {
     return <ErrorState title="题目编号不正确" error={new Error('请返回题库重新选择题目。')} />
@@ -114,7 +130,7 @@ export function QuestionDetailPage() {
   return (
     <div className="page-container reading-page">
       <Link to={backTo} className="back-link">
-        <ArrowLeftOutlined aria-hidden="true" /> 返回题库
+        <AppIcon icon="lucide:arrow-left" size={16} /> 返回题库
       </Link>
 
       <div className={revealed && !isMobile ? 'reading-grid is-answer-open' : 'reading-grid'}>
@@ -158,7 +174,7 @@ export function QuestionDetailPage() {
                     >
                       <span className="option-item__key mono">{option.key}</span>
                       <span>{option.text}</span>
-                      {active && <CheckOutlined aria-hidden="true" />}
+                      {active && <AppIcon icon="lucide:check" size={17} />}
                     </button>
                   )
                 })}
@@ -179,7 +195,7 @@ export function QuestionDetailPage() {
             <Button
               type="primary"
               size="large"
-              icon={<LockOutlined aria-hidden="true" />}
+              icon={<AppIcon icon="lucide:eye" size={18} />}
               aria-expanded={revealed}
               aria-controls="answer-region"
               onClick={() => setRevealed((value) => !value)}
@@ -190,7 +206,7 @@ export function QuestionDetailPage() {
         </article>
 
         {!isMobile && revealed && (
-          <aside id="answer-region" className="answer-panel" aria-labelledby="answer-title">
+          <aside id="answer-region" ref={answerPanelRef} className="answer-panel" aria-labelledby="answer-title">
             {answerContent}
           </aside>
         )}
@@ -210,16 +226,6 @@ export function QuestionDetailPage() {
             {answerContent}
           </div>
         </Drawer>
-      )}
-
-      {revealed && !isMobile && (
-        <Alert
-          type="info"
-          showIcon
-          className="reading-note"
-          message="附页已打开"
-          description="按 Esc 或点击附页右上角的关闭按钮可以收起。"
-        />
       )}
     </div>
   )

@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Button, Empty, Input, Pagination, Select, Skeleton, Tag } from 'antd'
-import { SearchOutlined } from '@ant-design/icons'
+import { AppIcon } from '@/components/AppIcon'
 import { Link, useSearchParams } from 'react-router-dom'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { catalogApi } from '@/api/catalog'
@@ -8,6 +8,7 @@ import type { Difficulty, QuestionQuery } from '@/types/api'
 import { DifficultyBadge } from '@/components/DifficultyBadge'
 import { ErrorState } from '@/components/ErrorState'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
+import { animateStagger, canAnimate } from '@/lib/gsap'
 
 const PAGE_SIZE = 10
 
@@ -58,6 +59,17 @@ export function QuestionListPage() {
     queryFn: () => catalogApi.listQuestions(query),
     placeholderData: keepPreviousData,
   })
+  const listRef = useRef<HTMLOListElement | null>(null)
+
+  useEffect(() => {
+    const container = listRef.current
+    if (!container || !questions.data?.rows.length || !canAnimate()) return
+    const rows = container.querySelectorAll('.question-list__item')
+    const tween = animateStagger(rows, { duration: 0.3, stagger: 0.045 })
+    return () => {
+      tween.kill()
+    }
+  }, [questions.dataUpdatedAt, questions.data?.rows.length])
 
   const tagOptions = useMemo(() => {
     const values = new Set<string>()
@@ -126,7 +138,7 @@ export function QuestionListPage() {
             value={keyword}
             onChange={(event) => setKeyword(event.target.value)}
             allowClear
-            prefix={<SearchOutlined aria-hidden="true" />}
+            prefix={<AppIcon icon="lucide:search" size={17} />}
             placeholder="搜索题目标题…"
             aria-label="搜索题目标题"
             className="filter-search"
@@ -174,7 +186,7 @@ export function QuestionListPage() {
         </div>
       ) : questions.data && questions.data.rows.length > 0 ? (
         <>
-          <ol className="question-list">
+          <ol className="question-list" ref={listRef}>
             {questions.data.rows.map((question, index) => (
               <li key={question.id} className="question-list__item">
                 <Link
@@ -198,7 +210,7 @@ export function QuestionListPage() {
                   </span>
                   <DifficultyBadge value={question.difficulty} />
                   <span className="question-row__arrow" aria-hidden="true">
-                    →
+                    <AppIcon icon="lucide:arrow-up-right" size={18} />
                   </span>
                 </Link>
               </li>

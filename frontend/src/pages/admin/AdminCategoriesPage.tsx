@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { App as AntApp, Button, Form, Input, InputNumber, Modal, Space, Table, Tooltip } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
-import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons'
+import { AppIcon } from '@/components/AppIcon'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { adminApi } from '@/api/admin'
 import type { QuestionCategory } from '@/types/api'
@@ -72,11 +72,11 @@ export function AdminCategoriesPage() {
       render: (_, record) => (
         <Space size={4}>
           {hasPermission(user, PERMISSIONS.categoryEdit) && (
-            <Button type="link" size="small" icon={<EditOutlined />} onClick={() => openEdit(record)}>重命名</Button>
+            <Button type="link" size="small" icon={<AppIcon icon="lucide:pencil" size={15} />} onClick={() => openEdit(record)}>重命名</Button>
           )}
           {hasPermission(user, PERMISSIONS.categoryRemove) && (
             <Tooltip title={record.questionCount > 0 ? `该分类下还有 ${record.questionCount} 道题，先移走题目` : undefined}>
-              <Button type="link" size="small" danger icon={<DeleteOutlined />} disabled={record.questionCount > 0} onClick={() => setDeleting(record)}>删除</Button>
+              <Button type="link" size="small" danger icon={<AppIcon icon="lucide:trash-2" size={15} />} disabled={record.questionCount > 0} onClick={() => setDeleting(record)}>删除</Button>
             </Tooltip>
           )}
         </Space>
@@ -90,7 +90,7 @@ export function AdminCategoriesPage() {
         eyebrow="TAXONOMY / 分类"
         title="分类管理"
         description="分类是题库的目录。仍有题目的分类不能直接删除，避免误删整个主题。"
-        actions={hasPermission(user, PERMISSIONS.categoryAdd) ? <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>新建分类</Button> : undefined}
+        actions={hasPermission(user, PERMISSIONS.categoryAdd) ? <Button type="primary" icon={<AppIcon icon="lucide:plus" size={16} />} onClick={openCreate}>新建分类</Button> : undefined}
       />
       {categories.isError ? (
         <ErrorState error={categories.error} onRetry={() => void categories.refetch()} />

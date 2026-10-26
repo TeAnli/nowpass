@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Input, Select, Table, Tag } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
-import { SearchOutlined } from '@ant-design/icons'
+import { AppIcon } from '@/components/AppIcon'
 import { useQuery } from '@tanstack/react-query'
 import { adminApi } from '@/api/admin'
 import type { OperLogItem } from '@/types/api'
@@ -58,7 +58,7 @@ export function AdminLogsPage() {
       <section className="admin-toolbar">
         <Input
           allowClear
-          prefix={<SearchOutlined aria-hidden="true" />}
+          prefix={<AppIcon icon="lucide:search" size={17} />}
           placeholder="搜索操作名称…"
           aria-label="搜索操作名称"
           value={title}

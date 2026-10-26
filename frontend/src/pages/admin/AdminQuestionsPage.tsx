@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { App as AntApp, Button, Drawer, Form, Input, Modal, Select, Skeleton, Space, Table, Tabs, Tag } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
-import { DeleteOutlined, EditOutlined, PlusOutlined, SearchOutlined } from '@ant-design/icons'
+import { AppIcon } from '@/components/AppIcon'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { adminApi } from '@/api/admin'
 import type { Difficulty, QuestionListItem, QuestionOption, QuestionUpsertCommand } from '@/types/api'
@@ -164,13 +164,13 @@ function QuestionEditor({ questionId, open, onClose, onSaved }: {
             <section className="choice-editor" aria-labelledby="choice-editor-title">
               <div className="choice-editor__head">
                 <div><h3 id="choice-editor-title">选项与答案键</h3><p>选项与答案键必须成对出现；多选可填 AC。</p></div>
-                <Button size="small" icon={<PlusOutlined />} onClick={() => setOptions((current) => [...current, { key: String.fromCharCode(65 + current.length), text: '' }])}>添加选项</Button>
+                <Button size="small" icon={<AppIcon icon="lucide:plus" size={15} />} onClick={() => setOptions((current) => [...current, { key: String.fromCharCode(65 + current.length), text: '' }])}>添加选项</Button>
               </div>
               {options.map((option, index) => (
                 <div className="option-editor-row" key={index}>
                   <Input value={option.key} onChange={(event) => updateOption(index, 'key', event.target.value)} aria-label={`选项 ${index + 1} 的键`} maxLength={2} className="option-key-input" />
                   <Input value={option.text} onChange={(event) => updateOption(index, 'text', event.target.value)} placeholder={`选项 ${index + 1} 的内容`} aria-label={`选项 ${index + 1} 的内容`} />
-                  <Button type="text" danger aria-label={`删除选项 ${index + 1}`} icon={<DeleteOutlined />} onClick={() => setOptions((current) => current.filter((_, i) => i !== index))} />
+                  <Button type="text" danger aria-label={`删除选项 ${index + 1}`} icon={<AppIcon icon="lucide:trash-2" size={15} />} onClick={() => setOptions((current) => current.filter((_, i) => i !== index))} />
                 </div>
               ))}
               <Form.Item label="答案键" required style={{ marginTop: 16 }}>
@@ -220,8 +220,8 @@ export function AdminQuestionsPage() {
       width: 170,
       render: (_, record) => (
         <Space size={4}>
-          {hasPermission(user, PERMISSIONS.questionEdit) && <Button type="link" size="small" icon={<EditOutlined />} onClick={() => { setEditingId(record.id); setEditorOpen(true) }}>编辑</Button>}
-          {hasPermission(user, PERMISSIONS.questionRemove) && <Button type="link" size="small" danger icon={<DeleteOutlined />} onClick={() => setDeleting(record)}>删除</Button>}
+          {hasPermission(user, PERMISSIONS.questionEdit) && <Button type="link" size="small" icon={<AppIcon icon="lucide:pencil" size={15} />} onClick={() => { setEditingId(record.id); setEditorOpen(true) }}>编辑</Button>}
+          {hasPermission(user, PERMISSIONS.questionRemove) && <Button type="link" size="small" danger icon={<AppIcon icon="lucide:trash-2" size={15} />} onClick={() => setDeleting(record)}>删除</Button>}
         </Space>
       ),
     },
@@ -233,10 +233,10 @@ export function AdminQuestionsPage() {
         eyebrow="QUESTION BANK / 题目"
         title="题目管理"
         description="题目正文与答案分开维护。列表只显示摘要，编辑区支持 Markdown 预览。"
-        actions={hasPermission(user, PERMISSIONS.questionAdd) ? <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditingId(null); setEditorOpen(true) }}>新建题目</Button> : undefined}
+        actions={hasPermission(user, PERMISSIONS.questionAdd) ? <Button type="primary" icon={<AppIcon icon="lucide:plus" size={16} />} onClick={() => { setEditingId(null); setEditorOpen(true) }}>新建题目</Button> : undefined}
       />
       <section className="admin-toolbar" aria-label="题目筛选">
-        <Input allowClear prefix={<SearchOutlined aria-hidden="true" />} placeholder="搜索题目标题…" aria-label="搜索题目标题" value={keyword} onChange={(event) => { setKeyword(event.target.value); setPage(1) }} className="admin-search" />
+        <Input allowClear prefix={<AppIcon icon="lucide:search" size={17} />} placeholder="搜索题目标题…" aria-label="搜索题目标题" value={keyword} onChange={(event) => { setKeyword(event.target.value); setPage(1) }} className="admin-search" />
         <Select allowClear placeholder="全部分类" aria-label="按分类筛选" value={categoryId ?? undefined} onChange={(value) => { setCategoryId(value ?? null); setPage(1) }} options={(categories.data ?? []).map((item) => ({ value: item.id, label: item.name }))} />
         <Select allowClear placeholder="全部难度" aria-label="按难度筛选" value={difficulty ?? undefined} onChange={(value) => { setDifficulty((value as Difficulty | undefined) ?? null); setPage(1) }} options={[{ value: 'easy', label: '基础' }, { value: 'medium', label: '进阶' }, { value: 'hard', label: '深入' }]} />
       </section>

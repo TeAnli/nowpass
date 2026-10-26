@@ -12,7 +12,7 @@ import {
   Tag,
 } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
-import { PlusOutlined, SearchOutlined } from '@ant-design/icons'
+import { AppIcon } from '@/components/AppIcon'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { adminApi } from '@/api/admin'
 import type { CreateUserCommand, UserListItem } from '@/types/api'
@@ -185,7 +185,7 @@ export function AdminUsersPage() {
           hasPermission(currentUser, PERMISSIONS.userAdd) ? (
             <Button
               type="primary"
-              icon={<PlusOutlined />}
+              icon={<AppIcon icon="lucide:plus" size={16} />}
               onClick={() => {
                 createForm.resetFields()
                 setCreateOpen(true)
@@ -214,7 +214,7 @@ export function AdminUsersPage() {
       <section className="admin-toolbar">
         <Input
           allowClear
-          prefix={<SearchOutlined aria-hidden="true" />}
+          prefix={<AppIcon icon="lucide:search" size={17} />}
           placeholder="搜索用户名、昵称或邮箱…"
           aria-label="搜索用户"
           value={keyword}

@@ -13,6 +13,23 @@
 - M4：接口联调与文档
 - 前端（React + Ant Design）
 
+## [0.1.5] - 2026-10-26
+
+### 新增
+- `nowpass-admin` 接口层（共 27 个 OpenAPI 路径）：
+  - 认证：`/api/auth/captcha`、`/email-code`、`/login`、`/register`、`/reset-password`、`/logout`、`/me`
+  - 用户端：`/api/questions`（分页筛选）、`/api/questions/{id}`（不含答案）、`/api/questions/{id}/answer`、`/api/categories`
+  - 个人中心：`/api/user/profile`、`/api/user/password`
+  - 后台：`/api/admin/questions` CRUD、`/categories` CRUD、`/users`（列表/建号/角色/状态/重置密码/删除）、`/online`（列表/强退）、`/oper-logs`
+  - `UserAdminService`：管理员建号、审批、停用、改角色、重置密码、删除（均带"改完即踢会话"）
+  - `OpenApiConfig`：springdoc + Bearer 授权按钮
+- 接口入参 DTO 与 Jakarta Validation 校验（`request/AuthRequests.kt`、`request/AdminRequests.kt`）
+
+### 修复
+- **越权缺陷**：`user` 角色原本带有 `question:list`，导致普通用户可访问后台题目列表接口（虽不含答案仍属越权）。改为普通用户零权限点——用户端接口只要求"已登录"，权限点只用于 `/api/admin` 下的接口
+- **错误状态映射**：登录失败/账号锁定原先返回 HTTP 401，会被前端拦截器误判为"会话过期"并跳登录页。改为仅"token 无效"返回 401，其余业务错误（6xx，含登录失败、锁定、限流）返回 HTTP 200 + 业务码
+- E2E 联调结论：验证码、登录、注册（待审批）、审批、越权拦截、失败锁定、限流、强退、改密失效旧会话、登出，全部实测通过
+
 ## [0.1.4] - 2026-10-26
 
 ### 新增

@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom'
 import { AppHeader } from '@/components/AppHeader'
+import { RouteMotion } from '@/components/RouteMotion'
 
 export function UserLayout() {
   return (
@@ -9,7 +10,9 @@ export function UserLayout() {
       </a>
       <AppHeader />
       <main id="main-content" className="site-main">
-        <Outlet />
+        <RouteMotion>
+          <Outlet />
+        </RouteMotion>
       </main>
       <footer className="site-footer">
         <span className="mono">NOWPASS · 先思考，再核对</span>

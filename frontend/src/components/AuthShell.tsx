@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { BrandMark } from '@/components/BrandMark'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { RouteMotion } from '@/components/RouteMotion'
 
 interface AuthShellProps {
   eyebrow: string
@@ -25,7 +26,9 @@ export function AuthShell({ eyebrow, headline, note, children }: AuthShellProps)
         <div className="auth-main__tools">
           <ThemeToggle />
         </div>
-        <div className="auth-card">{children}</div>
+        <RouteMotion>
+          <div className="auth-card">{children}</div>
+        </RouteMotion>
         <p className="auth-main__foot">NowPass · 仅供少部分人使用的面试题库</p>
       </section>
     </div>

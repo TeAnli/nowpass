@@ -1,25 +1,17 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Button } from 'antd'
-import {
-  AppstoreOutlined,
-  CloseOutlined,
-  FileTextOutlined,
-  HistoryOutlined,
-  HomeOutlined,
-  MenuOutlined,
-  TeamOutlined,
-  DesktopOutlined,
-} from '@ant-design/icons'
 import { BrandMark } from '@/components/BrandMark'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { AppIcon } from '@/components/AppIcon'
+import { RouteMotion } from '@/components/RouteMotion'
 
 const navItems = [
-  { to: '/admin/questions', label: '题目管理', icon: <FileTextOutlined aria-hidden="true" /> },
-  { to: '/admin/categories', label: '分类管理', icon: <AppstoreOutlined aria-hidden="true" /> },
-  { to: '/admin/users', label: '用户管理', icon: <TeamOutlined aria-hidden="true" /> },
-  { to: '/admin/online', label: '在线会话', icon: <DesktopOutlined aria-hidden="true" /> },
-  { to: '/admin/logs', label: '操作日志', icon: <HistoryOutlined aria-hidden="true" /> },
+  { to: '/admin/questions', label: '题目管理', icon: 'lucide:file-text' },
+  { to: '/admin/categories', label: '分类管理', icon: 'lucide:folder-open' },
+  { to: '/admin/users', label: '用户管理', icon: 'lucide:users' },
+  { to: '/admin/online', label: '在线会话', icon: 'lucide:monitor-dot' },
+  { to: '/admin/logs', label: '操作日志', icon: 'lucide:history' },
 ]
 
 export function AdminLayout() {
@@ -41,7 +33,7 @@ export function AdminLayout() {
           className="admin-menu-toggle"
           aria-label={menuOpen ? '关闭后台导航' : '打开后台导航'}
           aria-expanded={menuOpen}
-          icon={menuOpen ? <CloseOutlined /> : <MenuOutlined />}
+          icon={<AppIcon icon={menuOpen ? 'lucide:x' : 'lucide:menu'} size={18} />}
           onClick={() => setMenuOpen((open) => !open)}
         />
         <Link to="/admin/questions" className="admin-topbar__title">
@@ -49,7 +41,7 @@ export function AdminLayout() {
         </Link>
         <div className="admin-topbar__actions">
           <Link to="/" className="admin-back-link">
-            <HomeOutlined aria-hidden="true" /> 返回题库
+            <AppIcon icon="lucide:home" size={16} /> 返回题库
           </Link>
           <ThemeToggle />
         </div>
@@ -66,7 +58,7 @@ export function AdminLayout() {
               to={item.to}
               className={({ isActive }) => (isActive ? 'admin-nav__item is-active' : 'admin-nav__item')}
             >
-              {item.icon}
+              <AppIcon icon={item.icon} size={18} />
               <span>{item.label}</span>
             </NavLink>
           ))}
@@ -81,7 +73,9 @@ export function AdminLayout() {
 
       <div className="admin-content">
         <main id="admin-main" className="admin-main">
-          <Outlet />
+          <RouteMotion>
+            <Outlet />
+          </RouteMotion>
         </main>
       </div>
     </div>

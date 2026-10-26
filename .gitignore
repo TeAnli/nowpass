@@ -36,3 +36,4 @@ application-local.yml
 
 # ---- dsh acl report (local machine only) ----
 .dsh-acl-report/
+*.tsbuildinfo

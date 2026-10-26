@@ -7,11 +7,22 @@
 ## [Unreleased]
 
 ### 计划中
-- M1：鉴权体系（验证码 / 登录 / 注册 / 找回密码 / 限流 / 登录失败锁定 / 操作日志）
-- M2：题库领域与用户端查询接口
-- M3：后台管理接口
-- M4：接口联调与文档
-- 前端（React + Ant Design）
+- 前端真实接口联调（需先启动 `docker compose up -d`）
+- 生产部署时将 `frontend/dist` 打包进后端静态资源
+
+## [0.2.0] - 2026-10-26
+
+### 新增
+- React 19 + TypeScript + Vite 单页应用，用户端与管理端共用一套路由和设计 token
+- 登录、注册、找回密码：图形验证码、邮箱验证码弹窗、待审批提示、会话过期统一跳转
+- 题库列表（分类/难度/标签/关键词筛选写入 URL）、详情页、按需加载的标准答案附页、个人中心
+- 后台题目/分类/用户/在线会话/操作日志五个页面，含权限点控制、危险操作确认、Markdown 编辑预览
+- 三层设计 token（primitive → semantic → component）与深色主题，Ant Design 主题对齐
+- `docs/06-frontend-design.md`：页面结构、组件状态、响应式与可访问性验收清单
+
+### 验证
+- `pnpm exec tsc --noEmit` 通过；`pnpm build` 通过；`pnpm lint` 无 error（3 条 Fast Refresh warning）
+- Vite 开发服务器可返回页面；后端接口联调因本机 Docker Desktop 未运行、PostgreSQL 5434 不可达而暂缓
 
 ## [0.1.7] - 2026-10-26
 

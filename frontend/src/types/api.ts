@@ -44,6 +44,7 @@ export interface QuestionListItem {
   difficulty: 'easy' | 'medium' | 'hard'
   title: string
   tags: string[]
+  viewCount: number
   createTime: string | null
 }
 
@@ -73,6 +74,7 @@ export interface QuestionCategory {
 }
 
 export type Difficulty = QuestionListItem['difficulty']
+export type QuestionSort = 'latest' | 'hot' | 'oldest' | 'title'
 
 export interface QuestionQuery {
   page?: number
@@ -81,6 +83,7 @@ export interface QuestionQuery {
   difficulty?: Difficulty | null
   keyword?: string | null
   tag?: string | null
+  sort?: QuestionSort | null
 }
 
 export interface QuestionUpsertCommand {

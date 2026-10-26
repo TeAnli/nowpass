@@ -73,13 +73,23 @@ export function AppHeader() {
         <BrandMark />
         <nav className="main-nav" aria-label="主导航">
           <NavLink to="/" end className={({ isActive }) => (isActive ? 'nav-link is-active' : 'nav-link')}>
+            <AppIcon icon="lucide:house" size={16} />
+            首页
+          </NavLink>
+          <NavLink to="/questions" className={({ isActive }) => (isActive ? 'nav-link is-active' : 'nav-link')}>
+            <AppIcon icon="lucide:library-big" size={16} />
             题库
+          </NavLink>
+          <NavLink to="/roadmap" className={({ isActive }) => (isActive ? 'nav-link is-active' : 'nav-link')}>
+            <AppIcon icon="lucide:route" size={16} />
+            刷题路线
           </NavLink>
           {user?.canEnterAdmin && (
             <NavLink
               to="/admin/questions"
               className={({ isActive }) => (isActive ? 'nav-link is-active' : 'nav-link')}
             >
+              <AppIcon icon="lucide:settings-2" size={16} />
               后台
             </NavLink>
           )}

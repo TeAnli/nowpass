@@ -17,6 +17,8 @@ const ResetPasswordPage = lazy(() =>
 const QuestionListPage = lazy(() =>
   import('@/pages/user/QuestionListPage').then((module) => ({ default: module.QuestionListPage })),
 )
+const HomePage = lazy(() => import('@/pages/user/HomePage').then((module) => ({ default: module.HomePage })))
+const RoadmapPage = lazy(() => import('@/pages/user/RoadmapPage').then((module) => ({ default: module.RoadmapPage })))
 const QuestionDetailPage = lazy(() =>
   import('@/pages/user/QuestionDetailPage').then((module) => ({ default: module.QuestionDetailPage })),
 )
@@ -85,8 +87,10 @@ export default function App() {
 
               <Route element={<AuthGate />}>
                 <Route element={<UserLayout />}>
-                  <Route index element={<QuestionListPage />} />
+                  <Route index element={<HomePage />} />
+                  <Route path="questions" element={<QuestionListPage />} />
                   <Route path="questions/:id" element={<QuestionDetailPage />} />
+                  <Route path="roadmap" element={<RoadmapPage />} />
                   <Route path="profile" element={<ProfilePage />} />
                 </Route>
 

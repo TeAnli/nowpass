@@ -13,6 +13,22 @@
 - M4：接口联调与文档
 - 前端（React + Ant Design）
 
+## [0.1.2] - 2026-10-26
+
+### 新增
+- `nowpass-common` 通用层（保持纯 Kotlin，不依赖 servlet/web）：
+  - `R<T>` 统一响应（字段 `code/msg/data`）
+  - `PageResult<T>` 分页响应（字段 `rows/total`）+ `PageQuery` 分页入参（页码从 1 开始，页容量上限 200）
+  - `ErrorCode` 错误码枚举（2xx 成功 / 4xx 请求错误 / 500 系统错误 / 6xx 业务错误，鉴权类集中在 61x~62x）
+  - `ServiceException` 业务异常
+  - `@Log` + `BusinessType`（操作日志）、`@RateLimiter` + `LimitType`（限流）
+  - `CacheKeys` 统一 Redis 键前缀与构造方法
+  - `Permissions` 权限点常量（权限点写在代码里，不建菜单表）
+  - `UserStatus` / `Difficulty` 枚举
+
+### 验证
+- `:nowpass-common:compileKotlin` 通过
+
 ## [0.1.1] - 2026-10-26
 
 ### 新增

@@ -27,6 +27,7 @@ object QuestionTable : Table("question") {
     val optionJson = jsonb<List<QuestionOption>>("options", Json.Default).nullable()
     val answerKey = varchar("answer_key", 20).nullable()
     val tags = array<String>("tags").clientDefault { emptyList() }
+    val viewCount = long("view_count").default(0L)
 
     val deleted = bool("deleted").clientDefault { false }
     val createBy = varchar("create_by", 64).nullable()

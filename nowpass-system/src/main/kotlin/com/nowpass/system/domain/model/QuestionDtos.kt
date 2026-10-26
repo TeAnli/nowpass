@@ -34,6 +34,7 @@ data class QuestionListItem(
     val difficulty: String,
     val title: String,
     val tags: List<String>,
+    val viewCount: Long = 0,
     val createTime: OffsetDateTime?,
 )
 

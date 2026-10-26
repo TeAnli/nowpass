@@ -26,9 +26,11 @@ class QuestionService(
     @Transactional(readOnly = true)
     fun page(query: QuestionPageQuery): PageResult<QuestionListItem> = questionDao.page(query)
 
-    @Transactional(readOnly = true)
-    fun detail(id: Long): QuestionDetail =
-        questionDao.findDetail(id) ?: throw ServiceException(ErrorCode.NOT_FOUND, "题目不存在")
+    fun detail(id: Long): QuestionDetail {
+        val detail = questionDao.findDetail(id) ?: throw ServiceException(ErrorCode.NOT_FOUND, "题目不存在")
+        questionDao.incrementViewCount(id)
+        return detail
+    }
 
     @Transactional(readOnly = true)
     fun answer(id: Long): QuestionAnswer =

@@ -16,4 +16,7 @@ class QuestionPageQuery : PageQuery() {
 
     /** 单个标签精确匹配 */
     var tag: String? = null
+
+    /** latest（默认）/ hot / oldest / title */
+    var sort: String? = null
 }

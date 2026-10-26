@@ -11,6 +11,7 @@ import com.nowpass.system.domain.table.QuestionTable
 import com.nowpass.system.mapper.toQuestionAnswer
 import com.nowpass.system.mapper.toQuestionDetail
 import com.nowpass.system.mapper.toQuestionListItem
+import org.jetbrains.exposed.v1.core.LongColumnType
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.TextColumnType
 import org.jetbrains.exposed.v1.core.and
@@ -41,6 +42,7 @@ class QuestionDao {
             QuestionTable.difficulty,
             QuestionTable.title,
             QuestionTable.tags,
+            QuestionTable.viewCount,
             QuestionTable.createTime,
         ).where { QuestionTable.deleted eq false }
 
@@ -60,7 +62,13 @@ class QuestionDao {
         }
 
         val total = base.copy().count()
-        val rows = base.orderBy(QuestionTable.id to SortOrder.DESC)
+        val ordered = when (query.sort?.lowercase()) {
+            "hot" -> base.orderBy(QuestionTable.viewCount to SortOrder.DESC, QuestionTable.id to SortOrder.DESC)
+            "oldest" -> base.orderBy(QuestionTable.id to SortOrder.ASC)
+            "title" -> base.orderBy(QuestionTable.title to SortOrder.ASC)
+            else -> base.orderBy(QuestionTable.id to SortOrder.DESC)
+        }
+        val rows = ordered
             .limit(query.pageSize)
             .offset(query.offset)
             .map { it.toQuestionListItem() }
@@ -91,6 +99,15 @@ class QuestionDao {
             .limit(1)
             .firstOrNull()
             ?.toQuestionAnswer()
+
+    fun incrementViewCount(id: Long) {
+        transaction {
+            exec(
+                "update question set view_count = view_count + 1 where id = ? and deleted = false",
+                listOf(LongColumnType() to id),
+            )
+        }
+    }
 
     fun insert(command: QuestionUpsertCommand, operator: String): Long =
         QuestionTable.insert {

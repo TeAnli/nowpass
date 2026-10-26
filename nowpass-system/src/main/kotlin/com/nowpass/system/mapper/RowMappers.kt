@@ -51,6 +51,7 @@ fun ResultRow.toQuestionListItem(): QuestionListItem =
         difficulty = this[QuestionTable.difficulty],
         title = this[QuestionTable.title],
         tags = this[QuestionTable.tags],
+        viewCount = this[QuestionTable.viewCount],
         createTime = this[QuestionTable.createTime],
     )
 

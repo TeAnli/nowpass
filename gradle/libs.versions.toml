@@ -1,0 +1,29 @@
+[versions]
+kotlin = "2.3.21"
+springBoot = "3.5.16"
+exposed = "1.6.0"
+kotlinxSerialization = "1.11.0"
+springdoc = "2.10.0"
+hutool = "5.8.48"
+
+[libraries]
+spring-boot-bom = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "springBoot" }
+
+# --- Exposed 1.6.0：注意 starter 不含 exposed-jdbc，必须显式声明 ---
+exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
+exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
+exposed-json = { module = "org.jetbrains.exposed:exposed-json", version.ref = "exposed" }
+exposed-java-time = { module = "org.jetbrains.exposed:exposed-java-time", version.ref = "exposed" }
+exposed-spring-transaction = { module = "org.jetbrains.exposed:spring-transaction", version.ref = "exposed" }
+
+# 显式钉版本：Spring Boot BOM 会把 kotlinx-serialization 降到 1.6.3，而 exposed-json 1.6.0 依赖 1.11.0
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+
+springdoc-openapi-ui = { module = "org.springdoc:springdoc-openapi-starter-webmvc-ui", version.ref = "springdoc" }
+hutool-captcha = { module = "cn.hutool:hutool-captcha", version.ref = "hutool" }
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+spring-boot = { id = "org.springframework.boot", version.ref = "springBoot" }

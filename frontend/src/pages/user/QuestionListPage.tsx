@@ -1,26 +1,81 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Button, Empty, Input, Pagination, Select, Skeleton, Tag } from 'antd'
-import { AppIcon } from '@/components/AppIcon'
+import {
+  Button,
+  Empty,
+  Input,
+  Pagination,
+  Popover,
+  Segmented,
+  Select,
+  Skeleton,
+  Switch,
+  Tag,
+  Tooltip,
+} from 'antd'
 import { Link, useSearchParams } from 'react-router-dom'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { catalogApi } from '@/api/catalog'
-import type { Difficulty, QuestionQuery } from '@/types/api'
+import type { Difficulty, QuestionQuery, QuestionSort } from '@/types/api'
+import { AppIcon } from '@/components/AppIcon'
 import { DifficultyBadge } from '@/components/DifficultyBadge'
 import { ErrorState } from '@/components/ErrorState'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
+import { categoryMeta } from '@/data/categories'
+import { formatCount } from '@/lib/format'
 import { animateStagger, canAnimate } from '@/lib/gsap'
 
-const PAGE_SIZE = 10
+const PREFS_KEY = 'nowpass.bank.prefs'
+const FAVORITES_KEY = 'nowpass.favorites'
+
+interface BankPrefs {
+  pageSize: number
+  density: 'comfortable' | 'compact'
+  showTags: boolean
+}
+
+const DEFAULT_PREFS: BankPrefs = { pageSize: 10, density: 'comfortable', showTags: true }
+
+function readPrefs(): BankPrefs {
+  try {
+    const raw = localStorage.getItem(PREFS_KEY)
+    if (!raw) return DEFAULT_PREFS
+    const parsed = JSON.parse(raw) as Partial<BankPrefs>
+    return {
+      pageSize: [10, 20, 50].includes(Number(parsed.pageSize)) ? Number(parsed.pageSize) : 10,
+      density: parsed.density === 'compact' ? 'compact' : 'comfortable',
+      showTags: parsed.showTags !== false,
+    }
+  } catch {
+    return DEFAULT_PREFS
+  }
+}
+
+function readFavorites(): number[] {
+  try {
+    const raw = localStorage.getItem(FAVORITES_KEY)
+    const parsed = raw ? (JSON.parse(raw) as unknown) : []
+    return Array.isArray(parsed) ? parsed.filter((item): item is number => typeof item === 'number') : []
+  } catch {
+    return []
+  }
+}
 
 export function QuestionListPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const categoryId = Number(searchParams.get('categoryId')) || null
   const difficulty = (searchParams.get('difficulty') as Difficulty | null) ?? null
   const tag = searchParams.get('tag')
+  const sort = (searchParams.get('sort') as QuestionSort | null) ?? 'latest'
+  const onlyFavorites = searchParams.get('favorite') === '1'
   const page = Math.max(1, Number(searchParams.get('page')) || 1)
   const keywordFromUrl = searchParams.get('keyword') ?? ''
   const [keyword, setKeyword] = useState(keywordFromUrl)
+  const [prefs, setPrefs] = useState<BankPrefs>(readPrefs)
+  const [favorites, setFavorites] = useState<number[]>(readFavorites)
+  const [customOpen, setCustomOpen] = useState(false)
   const debouncedKeyword = useDebouncedValue(keyword.trim(), 350)
+  const listRef = useRef<HTMLOListElement | null>(null)
+  const listSectionRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     setKeyword(keywordFromUrl)
@@ -36,40 +91,70 @@ export function QuestionListPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedKeyword])
 
-  const query = useMemo<QuestionQuery>(
+  useEffect(() => {
+    try {
+      localStorage.setItem(PREFS_KEY, JSON.stringify(prefs))
+    } catch {
+      // ignore
+    }
+  }, [prefs])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites))
+    } catch {
+      // ignore
+    }
+  }, [favorites])
+
+  const baseFilters = useMemo(
     () => ({
-      page,
-      pageSize: PAGE_SIZE,
       categoryId,
       difficulty,
       tag: tag || null,
       keyword: keywordFromUrl || null,
+      sort,
     }),
-    [categoryId, difficulty, keywordFromUrl, page, tag],
+    [categoryId, difficulty, keywordFromUrl, sort, tag],
+  )
+
+  const query = useMemo<QuestionQuery>(
+    () => ({ ...baseFilters, page, pageSize: prefs.pageSize }),
+    [baseFilters, page, prefs.pageSize],
   )
 
   const categories = useQuery({ queryKey: ['categories'], queryFn: catalogApi.listCategories })
   const allTags = useQuery({
     queryKey: ['question-tags'],
-    queryFn: () => catalogApi.listQuestions({ page: 1, pageSize: 200 }),
+    queryFn: () => catalogApi.listQuestions({ page: 1, pageSize: 200, sort: 'title' }),
     staleTime: 5 * 60 * 1000,
+  })
+  const hotQuestions = useQuery({
+    queryKey: ['bank-hot'],
+    queryFn: () => catalogApi.listQuestions({ page: 1, pageSize: 3, sort: 'hot' }),
+    staleTime: 60 * 1000,
   })
   const questions = useQuery({
     queryKey: ['questions', query],
     queryFn: () => catalogApi.listQuestions(query),
     placeholderData: keepPreviousData,
+    enabled: !onlyFavorites,
   })
-  const listRef = useRef<HTMLOListElement | null>(null)
+  const favoriteCandidates = useQuery({
+    queryKey: ['favorite-candidates', baseFilters],
+    queryFn: () => catalogApi.listQuestions({ ...baseFilters, page: 1, pageSize: 200 }),
+    enabled: onlyFavorites,
+  })
 
-  useEffect(() => {
-    const container = listRef.current
-    if (!container || !questions.data?.rows.length || !canAnimate()) return
-    const rows = container.querySelectorAll('.question-list__item')
-    const tween = animateStagger(rows, { duration: 0.3, stagger: 0.045 })
-    return () => {
-      tween.kill()
-    }
-  }, [questions.dataUpdatedAt, questions.data?.rows.length])
+  const favoriteRows = useMemo(
+    () => (favoriteCandidates.data?.rows ?? []).filter((question) => favorites.includes(question.id)),
+    [favoriteCandidates.data, favorites],
+  )
+  const favoritePageRows = favoriteRows.slice((page - 1) * prefs.pageSize, page * prefs.pageSize)
+  const rows = onlyFavorites ? favoritePageRows : (questions.data?.rows ?? [])
+  const total = onlyFavorites ? favoriteRows.length : (questions.data?.total ?? 0)
+  const currentPage = onlyFavorites ? page : (questions.data?.page ?? page)
+  const isLoading = onlyFavorites ? favoriteCandidates.isPending : questions.isPending
 
   const tagOptions = useMemo(() => {
     const values = new Set<string>()
@@ -78,6 +163,25 @@ export function QuestionListPage() {
       .sort((left, right) => left.localeCompare(right, 'zh-CN'))
       .map((value) => ({ label: value, value }))
   }, [allTags.data])
+
+  useEffect(() => {
+    const container = listRef.current
+    if (!container || !rows.length || !canAnimate()) return
+    const items = container.querySelectorAll('.question-list__item')
+    const tween = animateStagger(items, { duration: 0.3, stagger: 0.045 })
+    return () => {
+      tween.kill()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onlyFavorites, page, questions.dataUpdatedAt, favoriteCandidates.dataUpdatedAt, prefs.pageSize])
+
+  useEffect(() => {
+    if (!categoryId) return
+    const timer = window.setTimeout(() => {
+      listSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 80)
+    return () => window.clearTimeout(timer)
+  }, [categoryId])
 
   const updateFilter = (key: string, value: string | number | null | undefined) => {
     const next = new URLSearchParams(searchParams)
@@ -92,47 +196,153 @@ export function QuestionListPage() {
     setSearchParams(new URLSearchParams())
   }
 
-  const hasFilters = Boolean(categoryId || difficulty || tag || keywordFromUrl)
+  const toggleFavorite = (id: number) => {
+    setFavorites((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]))
+  }
+
+  const hasFilters = Boolean(categoryId || difficulty || tag || keywordFromUrl || onlyFavorites || sort !== 'latest')
+  const activeCategory = categories.data?.find((category) => category.id === categoryId)
+
+  const prefsPanel = (
+    <div className="bank-prefs">
+      <div className="bank-prefs__row">
+        <span>每页题目</span>
+        <Select
+          value={prefs.pageSize}
+          onChange={(value) => {
+            setPrefs((current) => ({ ...current, pageSize: value }))
+            const next = new URLSearchParams(searchParams)
+            next.delete('page')
+            setSearchParams(next)
+          }}
+          options={[10, 20, 50].map((value) => ({ value, label: `${value} 条` }))}
+          aria-label="每页题目数量"
+        />
+      </div>
+      <div className="bank-prefs__row">
+        <span>列表密度</span>
+        <Segmented
+          value={prefs.density}
+          onChange={(value) =>
+            setPrefs((current) => ({ ...current, density: value as BankPrefs['density'] }))
+          }
+          options={[
+            { value: 'comfortable', label: '舒展' },
+            { value: 'compact', label: '紧凑' },
+          ]}
+        />
+      </div>
+      <div className="bank-prefs__row">
+        <span>显示标签</span>
+        <Switch
+          checked={prefs.showTags}
+          onChange={(checked) => setPrefs((current) => ({ ...current, showTags: checked }))}
+          aria-label="显示题目标签"
+        />
+      </div>
+      <Button
+        size="small"
+        type="link"
+        onClick={() => {
+          setPrefs(DEFAULT_PREFS)
+          setCustomOpen(false)
+        }}
+      >
+        恢复默认
+      </Button>
+    </div>
+  )
 
   return (
-    <div className="page-container question-index">
+    <div className="page-container question-index bank-page">
       <header className="page-heading">
-        <p className="eyebrow">THE QUESTION INDEX / 题库</p>
+        <p className="eyebrow">QUESTION BANK / 题库</p>
         <div className="page-heading__row">
-          <h1>今天读哪一道？</h1>
+          <h1>{activeCategory ? activeCategory.name : '面试题库'}</h1>
           <span className="result-count mono">
-            {questions.data ? `${questions.data.total} 道题` : '正在翻阅…'}
+            {questions.data ? `${formatCount(questions.data.total)} 道题` : '正在翻阅…'}
           </span>
         </div>
         <p className="page-heading__lead">
-          按主题或难度挑一道。题干里没有答案，想清楚之后再打开右侧附页。
+          {activeCategory
+            ? `正在阅读「${activeCategory.name}」相关题目。换一个知识点，或者继续加筛选条件。`
+            : '先按知识点选一组题，再用难度、标签和排序缩小范围。收藏与列表密度会保存在这台设备上。'}
         </p>
       </header>
 
-      <section className="filters" aria-label="题目筛选">
-        <div className="category-strip" role="group" aria-label="按分类筛选">
-          <button
-            type="button"
-            className={!categoryId ? 'category-chip is-active' : 'category-chip'}
-            onClick={() => updateFilter('categoryId', null)}
-            aria-pressed={!categoryId}
-          >
-            全部
-          </button>
-          {categories.data?.map((category) => (
-            <button
-              key={category.id}
-              type="button"
-              className={categoryId === category.id ? 'category-chip is-active' : 'category-chip'}
-              onClick={() => updateFilter('categoryId', category.id)}
-              aria-pressed={categoryId === category.id}
-            >
-              {category.name}
-              <span className="category-chip__count">{category.questionCount}</span>
-            </button>
-          ))}
+      <section className="bank-categories" aria-labelledby="bank-categories-title">
+        <div className="home-section__head">
+          <div>
+            <p className="eyebrow">KNOWLEDGE POINTS</p>
+            <h2 id="bank-categories-title">按知识点进入</h2>
+          </div>
+          {categoryId && (
+            <Button type="link" onClick={() => updateFilter('categoryId', null)}>
+              查看全部知识点
+            </Button>
+          )}
         </div>
+        <div className="knowledge-grid knowledge-grid--bank">
+          {(categories.data ?? []).map((category, index) => {
+            const meta = categoryMeta(category.name, index)
+            const active = category.id === categoryId
+            return (
+              <Link
+                className={active ? 'knowledge-card knowledge-card--active' : 'knowledge-card'}
+                data-index={index}
+                key={category.id}
+                to={`/questions?categoryId=${category.id}`}
+                aria-current={active ? 'page' : undefined}
+              >
+                <span className="knowledge-card__icon">
+                  <AppIcon icon={meta.icon} size={22} />
+                </span>
+                <div className="knowledge-card__body">
+                  <h3>{category.name}</h3>
+                  <p>{meta.description}</p>
+                </div>
+                <div className="knowledge-card__foot">
+                  <span>{category.questionCount} 道题</span>
+                  <span className="knowledge-card__hint">{meta.routeHint}</span>
+                  <AppIcon icon="lucide:arrow-right" size={16} />
+                </div>
+              </Link>
+            )
+          })}
+        </div>
+      </section>
 
+      {!hasFilters && (hotQuestions.data?.rows.length ?? 0) > 0 && (
+        <section className="bank-hot" aria-labelledby="bank-hot-title">
+          <div className="home-section__head">
+            <div>
+              <p className="eyebrow">MOST READ</p>
+              <h2 id="bank-hot-title">热门面试题</h2>
+            </div>
+            <Button type="link" onClick={() => updateFilter('sort', 'hot')}>
+              按热度查看全部
+            </Button>
+          </div>
+          <div className="bank-hot__grid">
+            {hotQuestions.data?.rows.map((question, index) => (
+              <Link
+                key={question.id}
+                to={`/questions/${question.id}`}
+                state={{ from: '/questions' }}
+                className="bank-hot__card"
+              >
+                <span className="mono bank-hot__index">{String(index + 1).padStart(2, '0')}</span>
+                <strong>{question.title}</strong>
+                <span className="bank-hot__meta">
+                  {question.categoryName ?? '未分类'} · {formatCount(question.viewCount)} 次浏览
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <section className="filters bank-filters" aria-label="题目筛选" ref={listSectionRef}>
         <div className="filter-controls">
           <Input
             value={keyword}
@@ -166,6 +376,37 @@ export function QuestionListPage() {
             options={tagOptions}
             loading={allTags.isPending}
           />
+          <Select
+            value={sort}
+            onChange={(value) => updateFilter('sort', value === 'latest' ? null : value)}
+            aria-label="题目排序"
+            options={[
+              { value: 'latest', label: '最新收录' },
+              { value: 'hot', label: '最热阅读' },
+              { value: 'oldest', label: '最早收录' },
+              { value: 'title', label: '标题排序' },
+            ]}
+          />
+        </div>
+        <div className="bank-filter-actions">
+          <Button
+            type={onlyFavorites ? 'primary' : 'default'}
+            icon={<AppIcon icon={onlyFavorites ? 'lucide:heart' : 'lucide:heart'} size={16} />}
+            onClick={() => updateFilter('favorite', onlyFavorites ? null : '1')}
+            aria-pressed={onlyFavorites}
+          >
+            只看收藏 {favorites.length > 0 ? `(${favorites.length})` : ''}
+          </Button>
+          <Popover
+            open={customOpen}
+            onOpenChange={setCustomOpen}
+            trigger="click"
+            content={prefsPanel}
+            placement="bottomRight"
+            title="列表自定义"
+          >
+            <Button icon={<AppIcon icon="lucide:sliders-horizontal" size={16} />}>自定义</Button>
+          </Popover>
           {hasFilters && (
             <Button type="link" onClick={clearFilters}>
               清空筛选
@@ -174,9 +415,12 @@ export function QuestionListPage() {
         </div>
       </section>
 
-      {questions.isError ? (
-        <ErrorState error={questions.error} onRetry={() => void questions.refetch()} />
-      ) : questions.isPending ? (
+      {questions.isError || (onlyFavorites && favoriteCandidates.isError) ? (
+        <ErrorState
+          error={onlyFavorites ? favoriteCandidates.error : questions.error}
+          onRetry={() => void (onlyFavorites ? favoriteCandidates.refetch() : questions.refetch())}
+        />
+      ) : isLoading ? (
         <div className="question-list" aria-busy="true" aria-live="polite">
           {[1, 2, 3, 4, 5].map((key) => (
             <div key={key} className="question-row-skeleton">
@@ -184,45 +428,70 @@ export function QuestionListPage() {
             </div>
           ))}
         </div>
-      ) : questions.data && questions.data.rows.length > 0 ? (
+      ) : rows.length > 0 ? (
         <>
-          <ol className="question-list" ref={listRef}>
-            {questions.data.rows.map((question, index) => (
+          <ol
+            className={prefs.density === 'compact' ? 'question-list question-list--compact' : 'question-list'}
+            ref={listRef}
+          >
+            {rows.map((question, index) => (
               <li key={question.id} className="question-list__item">
-                <Link
-                  to={`/questions/${question.id}`}
-                  state={{ from: `/${searchParams.toString()}` }}
-                  className="question-row"
-                >
-                  <span className="question-row__index mono">
-                    {String((page - 1) * PAGE_SIZE + index + 1).padStart(2, '0')}
-                  </span>
-                  <span className="question-row__body">
-                    <span className="question-row__title">{question.title}</span>
-                    <span className="question-row__meta">
-                      <span>{question.categoryName ?? '未分类'}</span>
-                      {question.tags.slice(0, 3).map((item) => (
-                        <Tag key={item} bordered={false} className="tag-plain">
-                          {item}
-                        </Tag>
-                      ))}
+                <div className="question-row">
+                  <Link
+                    to={`/questions/${question.id}`}
+                    state={{ from: `/questions${searchParams.toString() ? `?${searchParams.toString()}` : ''}` }}
+                    className="question-row__link"
+                  >
+                    <span className="question-row__index mono">
+                      {String((currentPage - 1) * prefs.pageSize + index + 1).padStart(2, '0')}
                     </span>
-                  </span>
-                  <DifficultyBadge value={question.difficulty} />
-                  <span className="question-row__arrow" aria-hidden="true">
-                    <AppIcon icon="lucide:arrow-up-right" size={18} />
-                  </span>
-                </Link>
+                    <span className="question-row__body">
+                      <span className="question-row__title">{question.title}</span>
+                      <span className="question-row__meta">
+                        <span>{question.categoryName ?? '未分类'}</span>
+                        {prefs.showTags &&
+                          question.tags.slice(0, 4).map((item) => (
+                            <Tag key={item} bordered={false} className="tag-plain">
+                              {item}
+                            </Tag>
+                          ))}
+                        <span className="question-row__views">
+                          <AppIcon icon="lucide:eye" size={13} /> {formatCount(question.viewCount)}
+                        </span>
+                      </span>
+                    </span>
+                    <DifficultyBadge value={question.difficulty} />
+                    <span className="question-row__arrow" aria-hidden="true">
+                      <AppIcon icon="lucide:arrow-up-right" size={18} />
+                    </span>
+                  </Link>
+                  <Tooltip title={favorites.includes(question.id) ? '取消收藏' : '收藏这道题'}>
+                    <button
+                      type="button"
+                      className={
+                        favorites.includes(question.id) ? 'favorite-button is-active' : 'favorite-button'
+                      }
+                      onClick={() => toggleFavorite(question.id)}
+                      aria-label={favorites.includes(question.id) ? `取消收藏：${question.title}` : `收藏：${question.title}`}
+                      aria-pressed={favorites.includes(question.id)}
+                    >
+                      <AppIcon
+                        icon={favorites.includes(question.id) ? 'lucide:heart' : 'lucide:heart'}
+                        size={17}
+                      />
+                    </button>
+                  </Tooltip>
+                </div>
               </li>
             ))}
           </ol>
           <div className="pagination-row">
             <Pagination
-              current={questions.data.page}
-              pageSize={questions.data.pageSize}
-              total={questions.data.total}
+              current={currentPage}
+              pageSize={prefs.pageSize}
+              total={total}
               showSizeChanger={false}
-              hideOnSinglePage={questions.data.total <= PAGE_SIZE}
+              hideOnSinglePage={total <= prefs.pageSize}
               onChange={(nextPage) => {
                 const next = new URLSearchParams(searchParams)
                 if (nextPage <= 1) next.delete('page')
@@ -230,7 +499,7 @@ export function QuestionListPage() {
                 setSearchParams(next)
                 window.scrollTo({ top: 0, behavior: 'smooth' })
               }}
-              showTotal={(total) => `共 ${total} 道题`}
+              showTotal={(count) => `共 ${count} 道题`}
             />
           </div>
         </>
@@ -238,7 +507,13 @@ export function QuestionListPage() {
         <div className="empty-panel">
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description={hasFilters ? '这个筛选组合下暂时没有题目。' : '题库还是空的，等管理员放题目进来。'}
+            description={
+              onlyFavorites
+                ? '还没有收藏题目。点击题目右侧的心形按钮，把想复习的题收进来。'
+                : hasFilters
+                  ? '这个筛选组合下暂时没有题目。'
+                  : '题库还是空的，等管理员放题目进来。'
+            }
           >
             {hasFilters && (
               <Button type="primary" onClick={clearFilters}>

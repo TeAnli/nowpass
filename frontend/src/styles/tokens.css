@@ -62,10 +62,16 @@
   --radius-md: 12px;
   --radius-lg: 18px;
   --radius-pill: 999px;
+  --duration-micro: 120ms;
   --duration-fast: 160ms;
   --duration-normal: 240ms;
+  --duration-enter: 320ms;
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-micro: cubic-bezier(0.25, 0, 0.25, 1);
+  --ease-entrance: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
   --shadow-card: 0 1px 2px rgb(23 42 42 / 5%);
+  --shadow-lift: 0 6px 18px rgb(23 42 42 / 8%);
   --shadow-float: 0 16px 48px rgb(23 42 42 / 12%);
   --z-header: 20;
   --z-drawer: 40;

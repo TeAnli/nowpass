@@ -1,0 +1,54 @@
+name: nowpass
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: nowpass-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: nowpass
+      POSTGRES_USER: nowpass
+      POSTGRES_PASSWORD: nowpass123
+      TZ: Asia/Shanghai
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    ports:
+      # 宿主机 5434 -> 容器 5432（5432 是本机 PostgreSQL 18，5433 是另一个项目的容器）
+      - "5434:5432"
+    volumes:
+      - nowpass-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nowpass -d nowpass"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    container_name: nowpass-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - nowpass-redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # 开发期邮件收件箱：http://localhost:8025
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: nowpass-mailpit
+    restart: unless-stopped
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+volumes:
+  nowpass-pgdata:
+  nowpass-redisdata:

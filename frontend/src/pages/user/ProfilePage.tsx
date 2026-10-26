@@ -1,5 +1,5 @@
 import { Alert, App as AntApp, Button, Form, Input, Tag } from 'antd'
-import { LockOutlined, UserOutlined } from '@ant-design/icons'
+import { AppIcon } from '@/components/AppIcon'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { authApi } from '@/api/auth'
@@ -49,7 +49,7 @@ export function ProfilePage() {
       </header>
       <div className="profile-grid">
         <section className="surface-card profile-card" aria-labelledby="account-title">
-          <div className="profile-card__avatar" aria-hidden="true"><UserOutlined /></div>
+          <div className="profile-card__avatar" aria-hidden="true"><AppIcon icon="lucide:user-round" size={24} /></div>
           <h2 id="account-title">{user?.nickname ?? '阅读者'}</h2>
           <p className="mono muted">@{user?.username}</p>
           <dl className="profile-meta">
@@ -61,7 +61,7 @@ export function ProfilePage() {
         <div className="profile-forms">
           <section className="surface-card form-card" aria-labelledby="nickname-title">
             <div className="form-card__head">
-              <span className="form-card__icon" aria-hidden="true"><UserOutlined /></span>
+              <span className="form-card__icon" aria-hidden="true"><AppIcon icon="lucide:user-round" size={18} /></span>
               <div><h2 id="nickname-title">修改昵称</h2><p>昵称会显示在页面右上角。</p></div>
             </div>
             <Form layout="vertical" initialValues={{ nickname: user?.nickname }} onFinish={(values: NicknameForm) => void updateNickname(values)} requiredMark="optional">
@@ -73,7 +73,7 @@ export function ProfilePage() {
           </section>
           <section className="surface-card form-card" aria-labelledby="password-title">
             <div className="form-card__head">
-              <span className="form-card__icon" aria-hidden="true"><LockOutlined /></span>
+              <span className="form-card__icon" aria-hidden="true"><AppIcon icon="lucide:lock-keyhole" size={18} /></span>
               <div><h2 id="password-title">修改密码</h2><p>改密后全部旧会话立即失效。</p></div>
             </div>
             <Alert type="warning" showIcon message="修改密码是一个严肃操作" description="提交后当前设备与其他设备都会退出，需要使用新密码重新登录。" className="form-alert" />

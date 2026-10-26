@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Alert, Form, Modal } from 'antd'
-import { CheckCircleOutlined } from '@ant-design/icons'
+import { AppIcon } from '@/components/AppIcon'
 import { ApiError } from '@/lib/api'
 import { CaptchaField, useCaptcha, useSendEmailCode } from '@/components/CaptchaField'
 
@@ -83,7 +83,7 @@ export function EmailCodeDialog({ open, scene, email, onCancel, onSent }: EmailC
         <CaptchaField scope={`email-${scene}`} captcha={captcha} />
       </Form>
       <p className="field-hint">
-        <CheckCircleOutlined aria-hidden="true" /> 发送成功后会返回注册表单，请把邮件中的 6 位验证码填回。
+        <AppIcon icon="lucide:check-circle-2" size={14} /> 发送成功后会返回注册表单，请把邮件中的 6 位验证码填回。
       </p>
     </Modal>
   )

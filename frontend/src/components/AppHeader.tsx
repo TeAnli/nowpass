@@ -1,11 +1,11 @@
 import { Avatar, Dropdown, Button } from 'antd'
 import type { MenuProps } from 'antd'
-import { DownOutlined, LogoutOutlined, SettingOutlined, UserOutlined } from '@ant-design/icons'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { App as AntApp } from 'antd'
 import { useQueryClient } from '@tanstack/react-query'
 import { BrandMark } from '@/components/BrandMark'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { AppIcon } from '@/components/AppIcon'
 import { useAuthStore } from '@/store/auth'
 import { authApi } from '@/api/auth'
 
@@ -40,14 +40,14 @@ export function AppHeader() {
   const menuItems: MenuProps['items'] = [
     {
       key: 'profile',
-      icon: <UserOutlined aria-hidden="true" />,
+      icon: <AppIcon icon="lucide:user-round" size={16} />,
       label: '个人中心',
     },
     ...(user?.canEnterAdmin
       ? [
           {
             key: 'admin',
-            icon: <SettingOutlined aria-hidden="true" />,
+            icon: <AppIcon icon="lucide:layout-dashboard" size={16} />,
             label: '后台管理',
           },
         ]
@@ -55,7 +55,7 @@ export function AppHeader() {
     { type: 'divider' as const },
     {
       key: 'logout',
-      icon: <LogoutOutlined aria-hidden="true" />,
+      icon: <AppIcon icon="lucide:log-out" size={16} />,
       label: '退出登录',
       danger: true,
     },
@@ -88,9 +88,9 @@ export function AppHeader() {
           <ThemeToggle />
           <Dropdown menu={{ items: menuItems, onClick: onMenuClick }} trigger={['click']}>
             <Button type="text" className="account-trigger" aria-label="账号菜单">
-              <Avatar size={28} icon={<UserOutlined aria-hidden="true" />} />
+              <Avatar size={28} icon={<AppIcon icon="lucide:user-round" size={16} />} />
               <span className="account-trigger__name">{user?.nickname ?? '未登录'}</span>
-              <DownOutlined className="account-trigger__caret" aria-hidden="true" />
+              <AppIcon icon="lucide:chevron-down" size={12} className="account-trigger__caret" />
             </Button>
           </Dropdown>
         </div>

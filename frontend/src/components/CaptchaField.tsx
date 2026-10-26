@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Button, Form, Input, Space } from 'antd'
-import { ReloadOutlined } from '@ant-design/icons'
+import { AppIcon } from '@/components/AppIcon'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { authApi } from '@/api/auth'
 
@@ -66,7 +66,7 @@ export function CaptchaField({ scope, captcha }: CaptchaFieldProps) {
             />
           ) : (
             <span className="captcha-button__placeholder">
-              <ReloadOutlined /> 换一张
+              <AppIcon icon="lucide:refresh-cw" size={14} /> 换一张
             </span>
           )}
         </Button>

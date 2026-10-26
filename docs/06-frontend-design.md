@@ -100,3 +100,27 @@
 - 375px、768px、1440px 布局检查；空/加载/错误/无权限状态检查。
 - 深/浅主题对比检查；reduced-motion 检查；URL 返回与刷新状态检查。
 - `pnpm build`、Web Interface Guidelines 审查、后端接口联调通过。
+
+## 7. v2 重设计：居中阅读版式与 GSAP 动效
+
+### 布局
+
+- 全局版心放宽：页头/页脚 1320px，业务页 1280px，后台 1280px。
+- 题库列表：标题与筛选居中，筛选器独立卡片，题目列表 1080px 宽的单列索引卡。
+- 题目详情：题干卡片 1080px 居中，题干与选项限制在 72ch 阅读宽度；**标准答案不再使用右侧栏，改为下方 980px 居中卡片**，与题干同轴。
+- 登录/注册：1440px 内的分栏卡片，左侧品牌区、右侧表单区；移动端单列。
+- 后台：深墨绿侧边栏 + 1280px 内容区，筛选工具栏统一为卡片。
+
+### 动效
+
+- 路由切换：`RouteMotion` 使用 GSAP `fromTo(autoAlpha, y)`，320–420ms，`power2.out`。
+- 题库列表：数据加载后 GSAP stagger 50ms 逐行入场，只动 `opacity/transform`。
+- 答案展开：GSAP 从下方 24px 浮入并平滑滚动到答案区，关闭即销毁 tween。
+- 微交互：按钮 hover 上浮 1px / active 缩放 0.98，卡片 hover 抬升，表格行操作按钮仅 hover/focus 时显示。
+- `prefers-reduced-motion` 下跳过 GSAP 动画并禁用 CSS 过渡。
+
+### 图标
+
+- 全项目统一使用 Iconify 的 Lucide 图标集，通过 `AppIcon` 组件调用；不再混用 Ant Design Icons。
+- 图标只作装饰时 `aria-hidden="true"`；图标按钮必须由父级按钮提供 `aria-label`。
+

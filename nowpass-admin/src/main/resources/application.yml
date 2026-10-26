@@ -49,7 +49,7 @@ nowpass:
     expire-minutes: 120
     refresh-threshold-minutes: 60
   mail:
-    enabled: false
+    enabled: true
     from: "NowPass <no-reply@nowpass.local>"
   register:
     # 注册后是否需要管理员审批才能激活

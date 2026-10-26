@@ -40,7 +40,7 @@ class CatalogController(
     @Operation(summary = "题目详情", description = "含题干与选项，不含标准答案")
     @GetMapping("/questions/{id}")
     fun detail(@PathVariable id: Long): R<QuestionDetail> =
-        R.ok(questionService.detail(id))
+        R.ok(questionService.detailAndCountView(id))
 
     @Operation(summary = "查看标准答案", description = "独立接口，便于统计与后续收权限")
     @GetMapping("/questions/{id}/answer")

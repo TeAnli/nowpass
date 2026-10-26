@@ -26,8 +26,12 @@ class QuestionService(
     @Transactional(readOnly = true)
     fun page(query: QuestionPageQuery): PageResult<QuestionListItem> = questionDao.page(query)
 
-    fun detail(id: Long): QuestionDetail {
-        val detail = questionDao.findDetail(id) ?: throw ServiceException(ErrorCode.NOT_FOUND, "题目不存在")
+    fun detail(id: Long): QuestionDetail =
+        questionDao.findDetail(id) ?: throw ServiceException(ErrorCode.NOT_FOUND, "题目不存在")
+
+    /** 用户端详情：读取成功后才累计浏览量，后台编辑详情不应污染热门排序。 */
+    fun detailAndCountView(id: Long): QuestionDetail {
+        val detail = detail(id)
         questionDao.incrementViewCount(id)
         return detail
     }

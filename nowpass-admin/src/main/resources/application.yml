@@ -69,6 +69,16 @@ nowpass:
     model: ${INTERVIEW_MODEL:gpt-4o-mini}
     temperature: 0.6
     max-history: 20
+  minio:
+    endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+    public-endpoint: ${MINIO_PUBLIC_ENDPOINT:http://127.0.0.1:9002}
+    access-key: ${MINIO_ACCESS_KEY:minioadmin}
+    secret-key: ${MINIO_SECRET_KEY:minioadmin}
+    bucket: ${MINIO_BUCKET:nowpass-media}
+    upload-url-minutes: 15
+    playback-url-minutes: 120
+    max-video-bytes: 524288000
+    max-cover-bytes: 5242880
 
 logging:
   level:

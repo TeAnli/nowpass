@@ -19,6 +19,7 @@ dependencies {
     implementation(libs.exposed.jdbc)
     implementation(libs.exposed.spring.transaction)
     implementation(libs.hutool.captcha)
+    implementation("io.minio:minio:8.5.17")
 
     // 必须有：LoginUser 等 Kotlin data class 反序列化依赖 KotlinModule，
     // 缺失时 Jackson 会报 "no Creators, like default constructor, exist"

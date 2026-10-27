@@ -25,6 +25,18 @@ object Permissions {
     const val CATEGORY_EDIT = "category:edit"
     const val CATEGORY_REMOVE = "category:remove"
 
+    // ---- 视频讲解 ----
+    const val VIDEO_LIST = "video:list"
+    const val VIDEO_QUERY = "video:query"
+    const val VIDEO_ADD = "video:add"
+    const val VIDEO_EDIT = "video:edit"
+    const val VIDEO_REMOVE = "video:remove"
+    const val VIDEO_PUBLISH = "video:publish"
+    const val VIDEO_CATEGORY_LIST = "video:category:list"
+    const val VIDEO_CATEGORY_ADD = "video:category:add"
+    const val VIDEO_CATEGORY_EDIT = "video:category:edit"
+    const val VIDEO_CATEGORY_REMOVE = "video:category:remove"
+
     // ---- 用户 ----
     const val USER_LIST = "system:user:list"
     const val USER_ADD = "system:user:add"

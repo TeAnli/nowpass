@@ -75,6 +75,9 @@ services:
       SPRING_MAIL_HOST: mailpit
       SPRING_MAIL_PORT: "1025"
       NOWPASS_MAIL_ENABLED: "true"
+      INTERVIEW_BASE_URL: ${INTERVIEW_BASE_URL:-https://api.openai.com/v1}
+      INTERVIEW_API_KEY: ${INTERVIEW_API_KEY:-}
+      INTERVIEW_MODEL: ${INTERVIEW_MODEL:-gpt-4o-mini}
     ports:
       - "18090:18090"
 

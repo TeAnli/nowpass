@@ -198,3 +198,14 @@ token 为登录接口返回的 32 位字符串（Redis 会话键的一部分）�
 | 643 | 验证邮件发送失败 | 200 |
 | 651 | 操作过于频繁（限流） | 200 |
 | 661 | 原密码不正确 | 200 |
+
+## 7. AI 面试官
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| POST | `/api/interview/chat` | 登录后可用。携带 `questionId` 与最近 `history`，返回面试官回复 |
+
+入参：`{ "questionId": 1, "history": [{ "role": "user", "content": "..." }] }`。
+`history` 最多 20 条，单条最多 4000 字；`role` 只接受 `user` / `assistant`。
+响应包含 `reply`、`provider`（`openai` / `local` / `local-fallback`）与 `questionId`。
+未配置 `INTERVIEW_API_KEY` 时使用本地模拟面试官。

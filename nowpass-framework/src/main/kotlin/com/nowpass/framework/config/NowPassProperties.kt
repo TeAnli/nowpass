@@ -18,6 +18,7 @@ class NowPassProperties {
     var register: Register = Register()
     var login: Login = Login()
     var init: Init = Init()
+    var interview: Interview = Interview()
 
     class Token {
         /** token 有效期（分钟） */
@@ -52,5 +53,18 @@ class NowPassProperties {
         var adminPassword: String = "Admin@123456"
         var adminNickname: String = "超级管理员"
         var adminEmail: String = "admin@nowpass.local"
+    }
+
+    class Interview {
+        /** 是否启用真实大模型；未配置 apiKey 时自动降级为本地模拟面试官 */
+        var enabled: Boolean = true
+
+        /** OpenAI 兼容接口地址，例如 https://api.deepseek.com/v1 */
+        var baseUrl: String = "https://api.openai.com/v1"
+
+        var apiKey: String = ""
+        var model: String = "gpt-4o-mini"
+        var temperature: Double = 0.6
+        var maxHistory: Int = 20
     }
 }

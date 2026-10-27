@@ -6,6 +6,7 @@ package com.nowpass.system.domain.model
 data class QuestionCategory(
     val id: Long,
     val name: String,
+    val icon: String? = null,
     val sort: Int,
     val questionCount: Long = 0,
 )

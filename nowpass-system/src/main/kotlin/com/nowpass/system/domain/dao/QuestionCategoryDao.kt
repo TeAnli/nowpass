@@ -31,6 +31,7 @@ class QuestionCategoryDao {
         return QuestionCategoryTable.select(
             QuestionCategoryTable.id,
             QuestionCategoryTable.name,
+            QuestionCategoryTable.icon,
             QuestionCategoryTable.sort,
         )
             .where { QuestionCategoryTable.deleted eq false }
@@ -40,6 +41,7 @@ class QuestionCategoryDao {
                 QuestionCategory(
                     id = id,
                     name = row[QuestionCategoryTable.name],
+                    icon = row[QuestionCategoryTable.icon],
                     sort = row[QuestionCategoryTable.sort],
                     questionCount = counts[id] ?: 0L,
                 )
@@ -50,6 +52,7 @@ class QuestionCategoryDao {
         QuestionCategoryTable.select(
             QuestionCategoryTable.id,
             QuestionCategoryTable.name,
+            QuestionCategoryTable.icon,
             QuestionCategoryTable.sort,
         )
             .where { (QuestionCategoryTable.id eq id) and (QuestionCategoryTable.deleted eq false) }
@@ -59,6 +62,7 @@ class QuestionCategoryDao {
                 QuestionCategory(
                     id = it[QuestionCategoryTable.id],
                     name = it[QuestionCategoryTable.name],
+                    icon = it[QuestionCategoryTable.icon],
                     sort = it[QuestionCategoryTable.sort],
                 )
             }
@@ -70,16 +74,18 @@ class QuestionCategoryDao {
         return base.limit(1).any()
     }
 
-    fun insert(name: String, sort: Int): Long =
+    fun insert(name: String, icon: String?, sort: Int): Long =
         QuestionCategoryTable.insert {
             it[QuestionCategoryTable.name] = name
+            it[QuestionCategoryTable.icon] = icon
             it[QuestionCategoryTable.sort] = sort
             it[QuestionCategoryTable.createTime] = OffsetDateTime.now()
         } get QuestionCategoryTable.id
 
-    fun update(id: Long, name: String, sort: Int): Int =
+    fun update(id: Long, name: String, icon: String?, sort: Int): Int =
         QuestionCategoryTable.update({ (QuestionCategoryTable.id eq id) and (QuestionCategoryTable.deleted eq false) }) {
             it[QuestionCategoryTable.name] = name
+            it[QuestionCategoryTable.icon] = icon
             it[QuestionCategoryTable.sort] = sort
             it[QuestionCategoryTable.updateTime] = OffsetDateTime.now()
         }

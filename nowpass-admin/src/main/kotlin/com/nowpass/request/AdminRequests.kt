@@ -60,5 +60,8 @@ data class CategoryRequest(
     @field:Size(max = 50, message = "分类名称不能超过 50 个字符")
     val name: String,
 
+    @field:Size(max = 64, message = "图标名不能超过 64 个字符")
+    val icon: String? = null,
+
     val sort: Int = 0,
 )

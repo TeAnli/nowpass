@@ -19,22 +19,22 @@ class QuestionCategoryService(
     @Transactional(readOnly = true)
     fun list(): List<QuestionCategory> = questionCategoryDao.listWithCount()
 
-    fun create(name: String, sort: Int): Long {
+    fun create(name: String, icon: String?, sort: Int): Long {
         val trimmed = name.trim()
         if (trimmed.isEmpty()) throw ServiceException(ErrorCode.BAD_REQUEST, "分类名称不能为空")
         if (questionCategoryDao.existsName(trimmed)) {
             throw ServiceException(ErrorCode.BAD_REQUEST, "分类已存在：$trimmed")
         }
-        return questionCategoryDao.insert(trimmed, sort)
+        return questionCategoryDao.insert(trimmed, icon?.trim()?.takeIf { it.isNotEmpty() }, sort)
     }
 
-    fun update(id: Long, name: String, sort: Int) {
+    fun update(id: Long, name: String, icon: String?, sort: Int) {
         val trimmed = name.trim()
         if (trimmed.isEmpty()) throw ServiceException(ErrorCode.BAD_REQUEST, "分类名称不能为空")
         if (questionCategoryDao.existsName(trimmed, excludeId = id)) {
             throw ServiceException(ErrorCode.BAD_REQUEST, "分类已存在：$trimmed")
         }
-        val affected = questionCategoryDao.update(id, trimmed, sort)
+        val affected = questionCategoryDao.update(id, trimmed, icon?.trim()?.takeIf { it.isNotEmpty() }, sort)
         if (affected == 0) throw ServiceException(ErrorCode.NOT_FOUND, "分类不存在")
     }
 

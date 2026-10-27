@@ -40,14 +40,14 @@ class AdminCategoryController(
     @PreAuthorize("hasAuthority('${Permissions.CATEGORY_ADD}')")
     @PostMapping
     fun create(@Valid @RequestBody request: CategoryRequest): R<Long> =
-        R.ok(questionCategoryService.create(request.name, request.sort))
+        R.ok(questionCategoryService.create(request.name, request.icon, request.sort))
 
     @Operation(summary = "编辑分类")
     @Log(title = "分类管理", businessType = BusinessType.UPDATE)
     @PreAuthorize("hasAuthority('${Permissions.CATEGORY_EDIT}')")
     @PutMapping("/{id}")
     fun update(@PathVariable id: Long, @Valid @RequestBody request: CategoryRequest): R<Unit> {
-        questionCategoryService.update(id, request.name, request.sort)
+        questionCategoryService.update(id, request.name, request.icon, request.sort)
         return R.ok()
     }
 

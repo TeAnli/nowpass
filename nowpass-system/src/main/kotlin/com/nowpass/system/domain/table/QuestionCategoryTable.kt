@@ -11,6 +11,7 @@ object QuestionCategoryTable : Table("question_category") {
 
     val id = long("id").autoIncrement()
     val name = varchar("name", 50)
+    val icon = varchar("icon", 64).nullable()
     val sort = integer("sort").clientDefault { 0 }
     val deleted = bool("deleted").clientDefault { false }
     val createTime = timestampWithTimeZone("create_time").clientDefault { OffsetDateTime.now() }

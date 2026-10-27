@@ -20,6 +20,9 @@ const QuestionListPage = lazy(() =>
 const HomePage = lazy(() => import('@/pages/user/HomePage').then((module) => ({ default: module.HomePage })))
 const TopicsPage = lazy(() => import('@/pages/user/TopicsPage').then((module) => ({ default: module.TopicsPage })))
 const RoadmapPage = lazy(() => import('@/pages/user/RoadmapPage').then((module) => ({ default: module.RoadmapPage })))
+const InterviewPage = lazy(() =>
+  import('@/pages/user/InterviewPage').then((module) => ({ default: module.InterviewPage })),
+)
 const QuestionDetailPage = lazy(() =>
   import('@/pages/user/QuestionDetailPage').then((module) => ({ default: module.QuestionDetailPage })),
 )
@@ -93,6 +96,7 @@ export default function App() {
                   <Route path="topics" element={<TopicsPage />} />
                   <Route path="questions/:id" element={<QuestionDetailPage />} />
                   <Route path="roadmap" element={<RoadmapPage />} />
+                  <Route path="interview" element={<InterviewPage />} />
                   <Route path="profile" element={<ProfilePage />} />
                 </Route>
 

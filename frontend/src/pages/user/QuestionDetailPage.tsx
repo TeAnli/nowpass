@@ -148,6 +148,11 @@ export function QuestionDetailPage() {
                 </Tag>
               ))}
             </div>
+            <Link className="ai-interview-entry" to={`/interview?questionId=${detail.id}`}>
+              <AppIcon icon="lucide:bot" size={16} />
+              和 AI 面试官聊聊这道题
+              <AppIcon icon="lucide:arrow-right" size={15} />
+            </Link>
           </header>
 
           <MarkdownView className="question-content">{detail.contentMd}</MarkdownView>

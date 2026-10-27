@@ -34,7 +34,9 @@ export function AppHeader() {
             ? 'topics'
             : location.pathname.startsWith('/roadmap')
               ? 'roadmap'
-              : 'home'
+              : location.pathname.startsWith('/interview')
+                ? 'interview'
+                : 'home'
 
   const moveInk = useCallback((key: string, animate = true) => {
     const link = linkRefs.current[key]
@@ -168,6 +170,17 @@ export function AppHeader() {
           >
             <AppIcon icon="lucide:route" size={16} />
             刷题路线
+          </NavLink>
+          <NavLink
+            to="/interview"
+            ref={(node) => {
+              linkRefs.current.interview = node
+            }}
+            onMouseEnter={() => moveInk('interview')}
+            className={({ isActive }) => (isActive ? 'nav-link is-active' : 'nav-link')}
+          >
+            <AppIcon icon="lucide:bot" size={16} />
+            AI 面试
           </NavLink>
           {user?.canEnterAdmin && (
             <NavLink

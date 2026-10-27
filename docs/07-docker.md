@@ -41,8 +41,12 @@ docker compose --profile app down
 - 后端（直连调试）：http://127.0.0.1:18090
 - Swagger：http://127.0.0.1:18090/swagger-ui.html
 - Mailpit：http://127.0.0.1:8025
+- MinIO API：http://127.0.0.1:9002
+- MinIO 控制台：http://127.0.0.1:9003
+- MinIO 本地账号：`minioadmin / minioadmin`，桶由后端启动时自动创建
 
 > 全栈模式会占用 `18090`，启动前先停止宿主机上的后端进程；开发前端 `5173` 与容器前端 `8088` 可以同时存在。
+> 本机 `9000/9001` 已被其它项目占用，因此 NowPass MinIO 使用 `9002/9003`；容器内部仍是 `9000/9001`。
 
 ## 3. 镜像结构
 

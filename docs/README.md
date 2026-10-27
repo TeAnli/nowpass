@@ -10,3 +10,4 @@
 | [06-frontend-design.md](06-frontend-design.md) | 前端设计系统、页面结构、组件状态与验收标准 |
 | [07-docker.md](07-docker.md) | 全栈 Docker 构建、运行、配置与生产建议 |
 | [08-ai-interview.md](08-ai-interview.md) | AI 面试官、语音输入、模型配置与安全边界 |
+| [09-video.md](09-video.md) | 视频讲解、MinIO 私有桶、上传/发布/清理 |

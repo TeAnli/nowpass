@@ -10,6 +10,24 @@
 - 前端真实接口联调（需先启动 `docker compose up -d`）
 - 生产部署时将 `frontend/dist` 打包进后端静态资源
 
+## [0.10.0] - 2026-10-27
+
+### 新增
+- 新增独立视频讲解模块：`/videos` 列表、`/videos/:id` 播放页
+- 新增私有 MinIO 存储：视频 `videos/{id}/{uuid}.mp4`、封面 `covers/{id}/{uuid}.jpg`
+- 管理员直传：创建草稿 → 预签名 PUT → finalize 校验 → 发布/下线
+- 新增视频分类、标签、讲师、关联题目、封面占位、播放进度与倍速记忆
+- 后台新增视频管理、视频分类管理，支持草稿预览与孤儿清理
+- 权限点：`video:list/query/add/edit/remove/publish` 与 `video:category:*`
+- `docker-compose.yml` 增加 MinIO 服务，本机端口 `9002/9003`（9000 被其它项目占用）
+- 新增 `docs/09-video.md`
+
+### 验证
+- V7 迁移成功；MinIO 私有桶创建成功
+- 管理端创建草稿、预签名上传、finalize、发布、用户端列表/详情/播放签名链路通过
+- MinIO CORS 预检返回 204
+- 前端 TypeScript、后端 Kotlin 编译通过
+
 ## [0.9.0] - 2026-10-27
 
 ### 新增

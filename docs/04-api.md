@@ -209,3 +209,19 @@ token 为登录接口返回的 32 位字符串（Redis 会话键的一部分）�
 `history` 最多 20 条，单条最多 4000 字；`role` 只接受 `user` / `assistant`。
 响应包含 `reply`、`provider`（`openai` / `local` / `local-fallback`）与 `questionId`。
 未配置 `INTERVIEW_API_KEY` 时使用本地模拟面试官。
+
+## 8. 视频讲解
+
+用户端（登录后可用）：
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| GET | `/api/videos` | 已发布视频分页，筛选 `categoryId`、`tag`、`keyword` |
+| GET | `/api/videos/categories` | 视频分类 |
+| GET | `/api/videos/tags` | 已发布视频标签去重 |
+| GET | `/api/videos/{id}` | 视频详情与播放签名 |
+| GET | `/api/videos/{id}/play` | 重新签发播放地址 |
+
+后台权限点：`video:list`、`video:query`、`video:add`、`video:edit`、`video:remove`、`video:publish`、`video:category:*`。
+
+上传流程：`POST /api/admin/videos` 创建草稿 → `POST /{id}/upload-url` 获取预签名 PUT → 浏览器直传 → `POST /{id}/finalize` 校验对象 → `POST /{id}/publish` 发布。详见 `docs/09-video.md`。

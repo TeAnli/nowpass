@@ -30,13 +30,15 @@ export function AppHeader() {
         ? 'admin'
         : location.pathname.startsWith('/questions')
           ? 'questions'
-          : location.pathname.startsWith('/topics')
-            ? 'topics'
-            : location.pathname.startsWith('/roadmap')
-              ? 'roadmap'
-              : location.pathname.startsWith('/interview')
-                ? 'interview'
-                : 'home'
+          : location.pathname.startsWith('/videos')
+            ? 'videos'
+            : location.pathname.startsWith('/topics')
+              ? 'topics'
+              : location.pathname.startsWith('/roadmap')
+                ? 'roadmap'
+                : location.pathname.startsWith('/interview')
+                  ? 'interview'
+                  : 'home'
 
   const moveInk = useCallback((key: string, animate = true) => {
     const link = linkRefs.current[key]
@@ -148,6 +150,17 @@ export function AppHeader() {
           >
             <AppIcon icon="lucide:library-big" size={16} />
             题库
+          </NavLink>
+          <NavLink
+            to="/videos"
+            ref={(node) => {
+              linkRefs.current.videos = node
+            }}
+            onMouseEnter={() => moveInk('videos')}
+            className={({ isActive }) => (isActive ? 'nav-link is-active' : 'nav-link')}
+          >
+            <AppIcon icon="lucide:clapperboard" size={16} />
+            视频讲解
           </NavLink>
           <NavLink
             to="/topics"

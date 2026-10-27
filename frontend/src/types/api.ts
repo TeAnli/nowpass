@@ -74,6 +74,78 @@ export interface QuestionCategory {
   questionCount: number
 }
 
+export interface VideoCategory {
+  id: number
+  name: string
+  sort: number
+  videoCount: number
+}
+
+export interface VideoListItem {
+  id: number
+  title: string
+  speaker: string | null
+  categoryId: number
+  categoryName: string | null
+  tags: string[]
+  durationSeconds: number
+  coverUrl: string | null
+  publishedAt: string | null
+}
+
+export interface VideoDetail {
+  id: number
+  title: string
+  description: string | null
+  speaker: string | null
+  categoryId: number
+  categoryName: string | null
+  questionId: number | null
+  questionTitle: string | null
+  tags: string[]
+  durationSeconds: number
+  coverUrl: string | null
+  playUrl: string
+  publishedAt: string | null
+}
+
+export interface VideoAdminItem extends VideoListItem {
+  description: string | null
+  questionId: number | null
+  videoObjectKey: string | null
+  coverObjectKey: string | null
+  sizeBytes: number
+  contentType: string | null
+  status: 'draft' | 'published' | 'offline'
+  createTime: string | null
+  updateTime: string | null
+}
+
+export interface VideoQuery {
+  page?: number
+  pageSize?: number
+  categoryId?: number | null
+  keyword?: string
+  tag?: string | null
+  status?: string | null
+}
+
+export interface VideoUpsertCommand {
+  title: string
+  description?: string | null
+  speaker?: string | null
+  categoryId: number
+  questionId?: number | null
+  tags?: string[]
+  durationSeconds?: number
+}
+
+export interface VideoUploadTicket {
+  uploadUrl: string
+  objectKey: string
+  expiresInSeconds: number
+}
+
 export type Difficulty = QuestionListItem['difficulty']
 export type QuestionSort = 'latest' | 'hot' | 'oldest' | 'title'
 

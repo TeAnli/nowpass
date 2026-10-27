@@ -19,6 +19,12 @@ const QuestionListPage = lazy(() =>
 )
 const HomePage = lazy(() => import('@/pages/user/HomePage').then((module) => ({ default: module.HomePage })))
 const TopicsPage = lazy(() => import('@/pages/user/TopicsPage').then((module) => ({ default: module.TopicsPage })))
+const VideoListPage = lazy(() =>
+  import('@/pages/user/VideoListPage').then((module) => ({ default: module.VideoListPage })),
+)
+const VideoDetailPage = lazy(() =>
+  import('@/pages/user/VideoDetailPage').then((module) => ({ default: module.VideoDetailPage })),
+)
 const RoadmapPage = lazy(() => import('@/pages/user/RoadmapPage').then((module) => ({ default: module.RoadmapPage })))
 const InterviewPage = lazy(() =>
   import('@/pages/user/InterviewPage').then((module) => ({ default: module.InterviewPage })),
@@ -32,6 +38,12 @@ const AdminQuestionsPage = lazy(() =>
 )
 const AdminCategoriesPage = lazy(() =>
   import('@/pages/admin/AdminCategoriesPage').then((module) => ({ default: module.AdminCategoriesPage })),
+)
+const AdminVideosPage = lazy(() =>
+  import('@/pages/admin/AdminVideosPage').then((module) => ({ default: module.AdminVideosPage })),
+)
+const AdminVideoCategoriesPage = lazy(() =>
+  import('@/pages/admin/AdminVideoCategoriesPage').then((module) => ({ default: module.AdminVideoCategoriesPage })),
 )
 const AdminUsersPage = lazy(() =>
   import('@/pages/admin/AdminUsersPage').then((module) => ({ default: module.AdminUsersPage })),
@@ -93,6 +105,8 @@ export default function App() {
                 <Route element={<UserLayout />}>
                   <Route index element={<HomePage />} />
                   <Route path="questions" element={<QuestionListPage />} />
+                  <Route path="videos" element={<VideoListPage />} />
+                  <Route path="videos/:id" element={<VideoDetailPage />} />
                   <Route path="topics" element={<TopicsPage />} />
                   <Route path="questions/:id" element={<QuestionDetailPage />} />
                   <Route path="roadmap" element={<RoadmapPage />} />
@@ -105,6 +119,8 @@ export default function App() {
                     <Route index element={<Navigate to="questions" replace />} />
                     <Route path="questions" element={<AdminQuestionsPage />} />
                     <Route path="categories" element={<AdminCategoriesPage />} />
+                    <Route path="videos" element={<AdminVideosPage />} />
+                    <Route path="video-categories" element={<AdminVideoCategoriesPage />} />
                     <Route path="users" element={<AdminUsersPage />} />
                     <Route path="online" element={<AdminOnlinePage />} />
                     <Route path="logs" element={<AdminLogsPage />} />

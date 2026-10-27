@@ -35,6 +35,18 @@ export function formatDuration(milliseconds: number | null | undefined): string 
   return `${(milliseconds / 1000).toFixed(2)} s`
 }
 
+/** 视频秒数格式化为 12:34 / 1:02:03 */
+export function formatVideoDuration(totalSeconds: number | null | undefined): string {
+  if (totalSeconds === null || totalSeconds === undefined || totalSeconds <= 0) return '00:00'
+  const seconds = Math.floor(totalSeconds)
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
+  const remain = seconds % 60
+  return hours > 0
+    ? `${hours}:${String(minutes).padStart(2, '0')}:${String(remain).padStart(2, '0')}`
+    : `${String(minutes).padStart(2, '0')}:${String(remain).padStart(2, '0')}`
+}
+
 export function formatCount(value: number | null | undefined): string {
   if (value === null || value === undefined) return '0'
   return new Intl.NumberFormat('zh-CN').format(value)

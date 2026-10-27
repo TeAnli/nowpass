@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { App as AntApp, Button, Form, Input, InputNumber, Modal, Space, Table, Tooltip } from 'antd'
+import { App as AntApp, AutoComplete, Button, Form, Input, InputNumber, Modal, Space, Table, Tooltip } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import { AppIcon } from '@/components/AppIcon'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
@@ -10,7 +10,21 @@ import { useAuthStore } from '@/store/auth'
 import { AdminPageHeader } from './AdminPageHeader'
 import { ErrorState } from '@/components/ErrorState'
 
-interface CategoryFormValues { name: string; sort: number }
+interface CategoryFormValues { name: string; icon?: string; sort: number }
+
+const ICON_OPTIONS = [
+  { value: 'logos:java', label: 'Java（彩色）' },
+  { value: 'logos:kotlin-icon', label: 'Kotlin（彩色）' },
+  { value: 'logos:spring-icon', label: 'Spring（彩色）' },
+  { value: 'logos:postgresql', label: 'PostgreSQL（彩色）' },
+  { value: 'logos:redis', label: 'Redis（彩色）' },
+  { value: 'logos:rabbitmq-icon', label: 'RabbitMQ（彩色）' },
+  { value: 'logos:docker-icon', label: 'Docker（彩色）' },
+  { value: 'lucide:network', label: '网络' },
+  { value: 'lucide:shapes', label: '设计模式' },
+  { value: 'lucide:monitor-cog', label: '操作系统' },
+  { value: 'lucide:layers', label: '通用分层' },
+]
 
 export function AdminCategoriesPage() {
   const user = useAuthStore((state) => state.user)
@@ -24,8 +38,9 @@ export function AdminCategoriesPage() {
   const categories = useQuery({ queryKey: ['admin-categories'], queryFn: adminApi.listCategories })
   const saveMutation = useMutation({
     mutationFn: async (values: CategoryFormValues) => {
-      if (editing) await adminApi.updateCategory(editing.id, values.name, values.sort)
-      else await adminApi.createCategory(values.name, values.sort)
+      const icon = values.icon?.trim() || null
+      if (editing) await adminApi.updateCategory(editing.id, values.name, icon, values.sort)
+      else await adminApi.createCategory(values.name, icon, values.sort)
     },
     onSuccess: () => {
       message.success(editing ? '分类已更新' : '分类已创建')
@@ -52,16 +67,23 @@ export function AdminCategoriesPage() {
   }
   const openEdit = (category: QuestionCategory) => {
     setEditing(category)
-    form.setFieldsValue({ name: category.name, sort: category.sort })
+    form.setFieldsValue({ name: category.name, icon: category.icon ?? undefined, sort: category.sort })
     setModalOpen(true)
   }
+  const watchedIcon = Form.useWatch('icon', form)
 
   const columns: ColumnsType<QuestionCategory> = [
     {
       title: '分类',
       dataIndex: 'name',
       render: (name: string, record) => (
-        <div className="table-title-cell"><strong>{name}</strong><span className="mono">SORT {record.sort}</span></div>
+        <div className="table-title-cell">
+          <span className="category-name-with-icon">
+            <AppIcon icon={record.icon || 'lucide:layers'} size={18} />
+            <strong>{name}</strong>
+          </span>
+          <span className="mono">SORT {record.sort}</span>
+        </div>
       ),
     },
     { title: '题目数', dataIndex: 'questionCount', width: 120, render: (count: number) => `${count} 道` },
@@ -104,6 +126,26 @@ export function AdminCategoriesPage() {
           <Form.Item label="分类名称" name="name" rules={[{ required: true, message: '请输入分类名称' }, { max: 40, message: '最多 40 个字符' }]}>
             <Input placeholder="例如 JVM / Kotlin / 数据库" />
           </Form.Item>
+          <Form.Item
+            label="图标"
+            name="icon"
+            extra="可从列表选择 Iconify 图标，也可以直接输入图标名，例如 logos:redis 或 lucide:database。"
+          >
+            <AutoComplete
+              options={ICON_OPTIONS}
+              placeholder="选择或输入 Iconify 图标名"
+              filterOption={(input, option) =>
+                String(option?.label ?? '').toLowerCase().includes(input.toLowerCase()) ||
+                String(option?.value ?? '').toLowerCase().includes(input.toLowerCase())
+              }
+              allowClear
+            />
+          </Form.Item>
+          <div className="category-icon-preview" aria-live="polite">
+            <span>图标预览</span>
+            <AppIcon icon={watchedIcon || 'lucide:layers'} size={26} />
+            <span className="mono">{watchedIcon || 'lucide:layers'}</span>
+          </div>
           <Form.Item label="排序" name="sort" rules={[{ required: true, message: '请输入排序值' }]}>
             <InputNumber min={0} max={9999} style={{ width: '100%' }} aria-label="分类排序" />
           </Form.Item>

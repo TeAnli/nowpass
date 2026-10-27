@@ -35,11 +35,11 @@ export const adminApi = {
 
   listCategories: () => apiRequest<QuestionCategory[]>('/api/admin/categories'),
 
-  createCategory: (name: string, sort: number) =>
-    apiRequest<number>('/api/admin/categories', { method: 'POST', body: { name, sort } }),
+  createCategory: (name: string, icon: string | null, sort: number) =>
+    apiRequest<number>('/api/admin/categories', { method: 'POST', body: { name, icon, sort } }),
 
-  updateCategory: (id: number, name: string, sort: number) =>
-    apiRequest<void>(`/api/admin/categories/${id}`, { method: 'PUT', body: { name, sort } }),
+  updateCategory: (id: number, name: string, icon: string | null, sort: number) =>
+    apiRequest<void>(`/api/admin/categories/${id}`, { method: 'PUT', body: { name, icon, sort } }),
 
   deleteCategory: (id: number) =>
     apiRequest<void>(`/api/admin/categories/${id}`, { method: 'DELETE' }),

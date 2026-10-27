@@ -9,6 +9,8 @@ import { RouteMotion } from '@/components/RouteMotion'
 const navItems = [
   { to: '/admin/questions', label: '题目管理', icon: 'lucide:file-text' },
   { to: '/admin/categories', label: '分类管理', icon: 'lucide:folder-open' },
+  { to: '/admin/videos', label: '视频管理', icon: 'lucide:clapperboard' },
+  { to: '/admin/video-categories', label: '视频分类', icon: 'lucide:tags' },
   { to: '/admin/users', label: '用户管理', icon: 'lucide:users' },
   { to: '/admin/online', label: '在线会话', icon: 'lucide:monitor-dot' },
   { to: '/admin/logs', label: '操作日志', icon: 'lucide:history' },

@@ -69,6 +69,19 @@ pnpm build        # 类型检查 + 生产构建
 - 前端从 `sessionStorage` 读取会话 token；401 会清空本地会话并跳转登录。
 - 管理端按权限点隐藏危险操作，但服务端仍会独立校验（前端隐藏不是安全边界）。
 
+## 一键全栈 Docker
+
+```bash
+# 中间件 + 后端 + Nginx 前端
+docker compose --profile app up -d --build
+
+# 前端 http://127.0.0.1:8088
+# 后端 http://127.0.0.1:18090
+# Mailpit http://127.0.0.1:8025
+```
+
+默认 `docker compose up -d` 仍只启动中间件，保留 Vite/IDE 热更新开发模式。详见 [docs/07-docker.md](docs/07-docker.md)。
+
 ## 文档索引
 
 见 [docs/README.md](docs/README.md)。

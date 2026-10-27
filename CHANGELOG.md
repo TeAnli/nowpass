@@ -10,6 +10,19 @@
 - 前端真实接口联调（需先启动 `docker compose up -d`）
 - 生产部署时将 `frontend/dist` 打包进后端静态资源
 
+## [0.5.0] - 2026-10-27
+
+### 新增
+- 后端多阶段 Dockerfile：Gradle 构建 + Temurin 21 JRE 运行、非 root 用户、健康检查
+- 前端 Dockerfile：Node 22 构建 + Nginx 静态托管、SPA history 回退、`/api` 反向代理
+- `docker-compose.yml` 新增可选 `app` profile，可一键启动后端与前端容器
+- `docs/07-docker.md`：开发/全栈两种模式、环境变量、QQ SMTP 注入与生产建议
+
+### 验证
+- `nowpass-backend:local`、`nowpass-frontend:local` 构建成功
+- 容器内前端 `8088` 的 `/`、`/questions`、`/roadmap`、`/api/auth/captcha` 均返回 200
+- 后端容器健康，Flyway 与管理员初始化正常
+
 ## [0.4.0] - 2026-10-27
 
 ### 新增

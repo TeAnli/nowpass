@@ -8,3 +8,4 @@
 | [04-api.md](04-api.md) | REST 接口清单、鉴权约定、错误码 |
 | [05-development.md](05-development.md) | 本地开发、调试、提交规范、已知取舍 |
 | [06-frontend-design.md](06-frontend-design.md) | 前端设计系统、页面结构、组件状态与验收标准 |
+| [07-docker.md](07-docker.md) | 全栈 Docker 构建、运行、配置与生产建议 |

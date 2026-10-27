@@ -65,3 +65,14 @@ data class CategoryRequest(
 
     val sort: Int = 0,
 )
+
+/**
+ * 视频分类新增 / 编辑。
+ */
+data class VideoCategoryRequest(
+    @field:NotBlank(message = "分类名称不能为空")
+    @field:Size(max = 50, message = "分类名称不能超过 50 个字符")
+    val name: String,
+
+    val sort: Int = 0,
+)

@@ -60,6 +60,36 @@ const CATEGORY_META: Record<string, CategoryMeta> = {
     description: '进程线程、内存、I/O 与调度',
     routeHint: '看清底层的运行方式',
   },
+  分布式系统: {
+    icon: 'lucide:share-2',
+    description: 'CAP、分布式锁、事务与一致性',
+    routeHint: '把一致性讲明白',
+  },
+  微服务: {
+    icon: 'lucide:boxes',
+    description: '服务拆分、注册发现、配置与灰度',
+    routeHint: '理解服务之间的边界',
+  },
+  数据结构与算法: {
+    icon: 'lucide:binary',
+    description: '复杂度、排序、动态规划与索引结构',
+    routeHint: '把思路和复杂度说清楚',
+  },
+  容器与云原生: {
+    icon: 'logos:docker-icon',
+    description: 'Docker、Kubernetes、发布与可观测性',
+    routeHint: '从镜像走到集群',
+  },
+  'Web 安全': {
+    icon: 'lucide:shield-check',
+    description: 'XSS、CSRF、注入、认证与越权',
+    routeHint: '先假设输入不可信',
+  },
+  Linux: {
+    icon: 'lucide:terminal',
+    description: '进程线程、I/O 模型、内存与排障',
+    routeHint: '回到命令行看现场',
+  },
 }
 
 const FALLBACK_ICONS = ['lucide:layers', 'lucide:book-marked', 'lucide:sparkles', 'lucide:compass']

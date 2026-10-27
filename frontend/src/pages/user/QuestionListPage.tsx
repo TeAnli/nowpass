@@ -192,6 +192,7 @@ export function QuestionListPage() {
 
   const hasFilters = Boolean(categoryId || difficulty || tag || keywordFromUrl || onlyFavorites || sort !== 'latest')
   const activeCategory = categories.data?.find((category) => category.id === categoryId)
+  const totalQuestionCount = (categories.data ?? []).reduce((sum, category) => sum + category.questionCount, 0)
 
   const prefsPanel = (
     <div className="bank-prefs">
@@ -256,7 +257,7 @@ export function QuestionListPage() {
         <p className="page-heading__lead">
           {activeCategory
             ? `正在阅读「${activeCategory.name}」相关题目。可以继续加筛选条件，或切换分类。`
-            : '共 11 个知识点、20+ 道面试题。用分类、难度、标签与排序缩小范围，收藏与列表密度保存在当前设备。'}
+            : `共 ${categories.data?.length ?? 0} 个知识标签、${totalQuestionCount} 道面试题。用分类、难度、标签与排序缩小范围，收藏与列表密度保存在当前设备。`}
         </p>
         <Link to="/topics" className="text-link">
           按知识点浏览 <AppIcon icon="lucide:arrow-right" size={15} />

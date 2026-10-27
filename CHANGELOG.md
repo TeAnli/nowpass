@@ -10,6 +10,21 @@
 - 前端真实接口联调（需先启动 `docker compose up -d`）
 - 生产部署时将 `frontend/dist` 打包进后端静态资源
 
+## [0.7.0] - 2026-10-27
+
+### 新增
+- 新增 6 个知识标签：分布式系统、微服务、数据结构与算法、容器与云原生、Web 安全、Linux
+- 新增 30 道面试题，题库扩展至 **17 个标签、50 道题**
+- 新增标签图标：`lucide:share-2`、`lucide:boxes`、`lucide:binary`、`logos:docker-icon`、`lucide:shield-check`、`lucide:terminal`
+- 刷题路线扩展为七站，新增算法、框架与云原生、分布式与安全阶段
+- 题库说明中的标签数和题目数改为动态统计，避免后续扩题后文案过期
+
+### 验证
+- V6 迁移成功：17 个分类、50 道题
+- 分类 API 返回新增标签与图标，新增分类各 5 道题
+- `/`、`/topics`、`/questions`、`/roadmap` 均返回 200
+- 前端 TypeScript 检查、Docker 镜像重建通过，前后端容器 healthy
+
 ## [0.6.0] - 2026-10-27
 
 ### 新增

@@ -63,8 +63,8 @@ export function HomePage() {
             <p className="eyebrow">KNOWLEDGE MAP</p>
             <h2 id="knowledge-title">从知识点开始</h2>
           </div>
-          <Link to="/questions" className="home-section__link">
-            全部题目 <AppIcon icon="lucide:arrow-up-right" size={15} />
+          <Link to="/topics" className="home-section__link">
+            全部知识点 <AppIcon icon="lucide:arrow-up-right" size={15} />
           </Link>
         </div>
         <div className="knowledge-grid">
@@ -78,7 +78,7 @@ export function HomePage() {
                 to={`/questions?categoryId=${category.id}`}
               >
                 <span className="knowledge-card__icon">
-                  <AppIcon icon={meta.icon} size={22} />
+                  <AppIcon icon={category.icon || meta.icon} size={22} />
                 </span>
                 <div className="knowledge-card__body">
                   <h3>{category.name}</h3>

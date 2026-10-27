@@ -69,6 +69,7 @@ export interface QuestionAnswer {
 export interface QuestionCategory {
   id: number
   name: string
+  icon: string | null
   sort: number
   questionCount: number
 }

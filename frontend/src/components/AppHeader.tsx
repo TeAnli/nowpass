@@ -80,6 +80,10 @@ export function AppHeader() {
             <AppIcon icon="lucide:library-big" size={16} />
             题库
           </NavLink>
+          <NavLink to="/topics" className={({ isActive }) => (isActive ? 'nav-link is-active' : 'nav-link')}>
+            <AppIcon icon="lucide:tags" size={16} />
+            知识标签
+          </NavLink>
           <NavLink to="/roadmap" className={({ isActive }) => (isActive ? 'nav-link is-active' : 'nav-link')}>
             <AppIcon icon="lucide:route" size={16} />
             刷题路线

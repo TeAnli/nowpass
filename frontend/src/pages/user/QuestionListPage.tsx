@@ -20,7 +20,6 @@ import { AppIcon } from '@/components/AppIcon'
 import { DifficultyBadge } from '@/components/DifficultyBadge'
 import { ErrorState } from '@/components/ErrorState'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
-import { categoryMeta } from '@/data/categories'
 import { formatCount } from '@/lib/format'
 import { animateStagger, canAnimate } from '@/lib/gsap'
 
@@ -75,7 +74,6 @@ export function QuestionListPage() {
   const [customOpen, setCustomOpen] = useState(false)
   const debouncedKeyword = useDebouncedValue(keyword.trim(), 350)
   const listRef = useRef<HTMLOListElement | null>(null)
-  const listSectionRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     setKeyword(keywordFromUrl)
@@ -175,14 +173,6 @@ export function QuestionListPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onlyFavorites, page, questions.dataUpdatedAt, favoriteCandidates.dataUpdatedAt, prefs.pageSize])
 
-  useEffect(() => {
-    if (!categoryId) return
-    const timer = window.setTimeout(() => {
-      listSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }, 80)
-    return () => window.clearTimeout(timer)
-  }, [categoryId])
-
   const updateFilter = (key: string, value: string | number | null | undefined) => {
     const next = new URLSearchParams(searchParams)
     if (value === null || value === undefined || value === '') next.delete(key)
@@ -265,52 +255,13 @@ export function QuestionListPage() {
         </div>
         <p className="page-heading__lead">
           {activeCategory
-            ? `正在阅读「${activeCategory.name}」相关题目。换一个知识点，或者继续加筛选条件。`
-            : '先按知识点选一组题，再用难度、标签和排序缩小范围。收藏与列表密度会保存在这台设备上。'}
+            ? `正在阅读「${activeCategory.name}」相关题目。可以继续加筛选条件，或切换分类。`
+            : '共 11 个知识点、20+ 道面试题。用分类、难度、标签与排序缩小范围，收藏与列表密度保存在当前设备。'}
         </p>
+        <Link to="/topics" className="text-link">
+          按知识点浏览 <AppIcon icon="lucide:arrow-right" size={15} />
+        </Link>
       </header>
-
-      <section className="bank-categories" aria-labelledby="bank-categories-title">
-        <div className="home-section__head">
-          <div>
-            <p className="eyebrow">KNOWLEDGE POINTS</p>
-            <h2 id="bank-categories-title">按知识点进入</h2>
-          </div>
-          {categoryId && (
-            <Button type="link" onClick={() => updateFilter('categoryId', null)}>
-              查看全部知识点
-            </Button>
-          )}
-        </div>
-        <div className="knowledge-grid knowledge-grid--bank">
-          {(categories.data ?? []).map((category, index) => {
-            const meta = categoryMeta(category.name, index)
-            const active = category.id === categoryId
-            return (
-              <Link
-                className={active ? 'knowledge-card knowledge-card--active' : 'knowledge-card'}
-                data-index={index}
-                key={category.id}
-                to={`/questions?categoryId=${category.id}`}
-                aria-current={active ? 'page' : undefined}
-              >
-                <span className="knowledge-card__icon">
-                  <AppIcon icon={meta.icon} size={22} />
-                </span>
-                <div className="knowledge-card__body">
-                  <h3>{category.name}</h3>
-                  <p>{meta.description}</p>
-                </div>
-                <div className="knowledge-card__foot">
-                  <span>{category.questionCount} 道题</span>
-                  <span className="knowledge-card__hint">{meta.routeHint}</span>
-                  <AppIcon icon="lucide:arrow-right" size={16} />
-                </div>
-              </Link>
-            )
-          })}
-        </div>
-      </section>
 
       {!hasFilters && (hotQuestions.data?.rows.length ?? 0) > 0 && (
         <section className="bank-hot" aria-labelledby="bank-hot-title">
@@ -342,7 +293,7 @@ export function QuestionListPage() {
         </section>
       )}
 
-      <section className="filters bank-filters" aria-label="题目筛选" ref={listSectionRef}>
+      <section className="filters bank-filters" aria-label="题目筛选">
         <div className="filter-controls">
           <Input
             value={keyword}
@@ -352,6 +303,17 @@ export function QuestionListPage() {
             placeholder="搜索题目标题…"
             aria-label="搜索题目标题"
             className="filter-search"
+          />
+          <Select
+            allowClear
+            showSearch
+            value={categoryId ?? undefined}
+            onChange={(value) => updateFilter('categoryId', value)}
+            placeholder="全部分类"
+            aria-label="按分类筛选"
+            optionFilterProp="label"
+            options={(categories.data ?? []).map((category) => ({ value: category.id, label: category.name }))}
+            loading={categories.isPending}
           />
           <Select
             allowClear

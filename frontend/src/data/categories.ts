@@ -6,17 +6,17 @@ export interface CategoryMeta {
 
 const CATEGORY_META: Record<string, CategoryMeta> = {
   'Java 基础': {
-    icon: 'lucide:coffee',
+    icon: 'logos:java',
     description: '语法、集合、对象模型与常见陷阱',
     routeHint: '从语言地基开始',
   },
   JVM: {
-    icon: 'lucide:cpu',
+    icon: 'logos:java',
     description: '内存结构、GC、类加载与性能诊断',
     routeHint: '理解程序真正怎么跑',
   },
   数据库: {
-    icon: 'lucide:database',
+    icon: 'logos:postgresql',
     description: 'SQL、索引、事务与 PostgreSQL 实践',
     routeHint: '把数据放稳',
   },
@@ -26,14 +26,39 @@ const CATEGORY_META: Record<string, CategoryMeta> = {
     routeHint: '看清请求走过的路',
   },
   Kotlin: {
-    icon: 'lucide:code-xml',
+    icon: 'logos:kotlin-icon',
     description: '空安全、扩展、协程与 Java 互操作',
     routeHint: '写出更 Kotlin 的代码',
   },
   Spring: {
-    icon: 'lucide:leaf',
+    icon: 'logos:spring-icon',
     description: 'IoC、AOP、事务、Spring Boot 工程化',
     routeHint: '把框架用明白',
+  },
+  并发编程: {
+    icon: 'logos:java',
+    description: '线程、锁、内存模型与线程池',
+    routeHint: '把并发问题讲清楚',
+  },
+  Redis: {
+    icon: 'logos:redis',
+    description: '缓存模型、持久化、热点与一致性',
+    routeHint: '从缓存命中率开始',
+  },
+  消息队列: {
+    icon: 'logos:rabbitmq-icon',
+    description: '可靠投递、重复消费与削峰填谷',
+    routeHint: '理解消息的旅程',
+  },
+  设计模式: {
+    icon: 'lucide:shapes',
+    description: '常用模式、适用边界与工程取舍',
+    routeHint: '别为了模式而模式',
+  },
+  操作系统: {
+    icon: 'lucide:monitor-cog',
+    description: '进程线程、内存、I/O 与调度',
+    routeHint: '看清底层的运行方式',
   },
 }
 

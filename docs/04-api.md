@@ -91,7 +91,7 @@ token 为登录接口返回的 32 位字符串（Redis 会话键的一部分）�
 | GET | `/api/questions` | 题目分页列表。筛选：`categoryId`、`difficulty`(easy/medium/hard)、`keyword`(标题模糊)、`tag`；排序 `sort` 取 `latest`（默认）/ `hot` / `oldest` / `title`。列表项含浏览量 `viewCount`，**不含题干与答案** |
 | GET | `/api/questions/{id}` | 题目详情：含题干 `contentMd` 与选项 `options`，**不含标准答案** |
 | GET | `/api/questions/{id}/answer` | 标准答案：`answerMd` + `answerKey`，独立接口 |
-| GET | `/api/categories` | 分类列表，含 `questionCount` |
+| GET | `/api/categories` | 分类列表，含 `questionCount` 与 Iconify 图标名 `icon` |
 | PUT | `/api/user/profile` | 修改昵称 |
 | PUT | `/api/user/password` | 修改密码；成功后**全部会话失效** |
 
@@ -140,6 +140,9 @@ token 为登录接口返回的 32 位字符串（Redis 会话键的一部分）�
 | POST | `/api/admin/categories` | `category:add` |
 | PUT | `/api/admin/categories/{id}` | `category:edit` |
 | DELETE | `/api/admin/categories/{id}` | `category:remove` |
+
+分类新增/编辑入参：`{ "name": "Redis", "icon": "logos:redis", "sort": 80 }`。
+`icon` 存 Iconify 图标名，可为空；前端后台支持从常用图标中选择，也允许直接输入图标名。
 
 删除限制：分类下仍有题目时拒绝删除（返回 400 并提示剩余题目数），不做级联删除。
 

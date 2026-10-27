@@ -49,6 +49,49 @@ services:
       - "1025:1025"
       - "8025:8025"
 
+  # ---------- 全栈容器化：docker compose --profile app up -d --build ----------
+  backend:
+    profiles: ["app"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: nowpass-backend:local
+    container_name: nowpass-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    environment:
+      TZ: Asia/Shanghai
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/nowpass
+      SPRING_DATASOURCE_USERNAME: nowpass
+      SPRING_DATASOURCE_PASSWORD: nowpass123
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: "6379"
+      SPRING_MAIL_HOST: mailpit
+      SPRING_MAIL_PORT: "1025"
+      NOWPASS_MAIL_ENABLED: "true"
+    ports:
+      - "18090:18090"
+
+  frontend:
+    profiles: ["app"]
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: nowpass-frontend:local
+    container_name: nowpass-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "8088:80"
+
 volumes:
   nowpass-pgdata:
   nowpass-redisdata:

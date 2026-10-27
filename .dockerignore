@@ -1,0 +1,13 @@
+.git
+.gitignore
+.idea
+.vscode
+.gradle
+logs
+**/build
+**/*.iml
+docs
+frontend/node_modules
+frontend/dist
+frontend/.vite
+frontend/deploy

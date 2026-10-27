@@ -117,6 +117,8 @@
 - 题库列表：数据加载后 GSAP stagger 50ms 逐行入场，只动 `opacity/transform`。
 - 答案展开：GSAP 从下方 24px 浮入并平滑滚动到答案区，关闭即销毁 tween。
 - 微交互：按钮 hover 上浮 1px / active 缩放 0.98，卡片 hover 抬升，表格行操作按钮仅 hover/focus 时显示。
+- 顶部导航：不再使用圆角胶囊背景，改为 GSAP 滑动的 2px 墨线与 5px 方形端点；hover 临时跟随目标菜单，离开回到当前路由；窗口变化时重新测量。
+- 卡片悬浮：知识卡图标放大 1.08 并轻微旋转、箭头右移；热门题标题下划线从左展开；题目序号 hover 填充主题色；路线阶段图标轻抬。
 - `prefers-reduced-motion` 下跳过 GSAP 动画并禁用 CSS 过渡。
 
 ### 图标

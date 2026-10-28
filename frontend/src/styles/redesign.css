@@ -2259,4 +2259,34 @@ body {
   .profile-card, .form-card { padding: 16px; }
 }
 
+/* 知识点页：比首页索引更舒展的卡片，但保留紧凑页面节奏 */
+.topics-index { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.topics-index .topic-row {
+  grid-template-columns: 24px 42px minmax(0, 1fr) 36px 16px;
+  gap: 12px;
+  min-height: 88px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  background: var(--color-surface);
+}
+.topics-index .topic-row:hover { transform: translateY(-1px); }
+.topics-index .topic-row__index { font-size: 10px; }
+.topics-index .topic-row__icon { width: 40px; height: 40px; }
+.topics-index .topic-row__body { gap: 4px; }
+.topics-index .topic-row__body strong { font-size: 14px; }
+.topics-index .topic-row__body small {
+  display: -webkit-box;
+  overflow: hidden;
+  white-space: normal;
+  font-size: 11px;
+  line-height: 1.55;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.topics-index .topic-row__count { font-size: 10px; }
+@media (max-width: 640px) {
+  .topics-index { grid-template-columns: 1fr; }
+  .topics-index .topic-row { min-height: 82px; padding: 12px 14px; }
+}
+
 

@@ -14,6 +14,9 @@ const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage').then((module
 const ResetPasswordPage = lazy(() =>
   import('@/pages/auth/ResetPasswordPage').then((module) => ({ default: module.ResetPasswordPage })),
 )
+const QqCallbackPage = lazy(() =>
+  import('@/pages/auth/QqCallbackPage').then((module) => ({ default: module.QqCallbackPage })),
+)
 const QuestionListPage = lazy(() =>
   import('@/pages/user/QuestionListPage').then((module) => ({ default: module.QuestionListPage })),
 )
@@ -100,6 +103,7 @@ export default function App() {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/oauth/qq/callback" element={<QqCallbackPage />} />
 
               <Route element={<AuthGate />}>
                 <Route element={<UserLayout />}>

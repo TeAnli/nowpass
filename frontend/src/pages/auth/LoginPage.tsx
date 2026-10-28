@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Alert, App as AntApp, Button, Form, Input } from 'antd'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { ApiError } from '@/lib/api'
 import { authApi } from '@/api/auth'
 import { useAuthStore } from '@/store/auth'
 import { AuthShell } from '@/components/AuthShell'
+import { AppIcon } from '@/components/AppIcon'
 import { CaptchaField, useCaptcha } from '@/components/CaptchaField'
 
 interface LoginFormValues { username: string; password: string; captchaCode: string }
@@ -29,7 +30,20 @@ export function LoginPage() {
   const token = useAuthStore((state) => state.token)
   const captcha = useCaptcha('login')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [qqLoading, setQqLoading] = useState(false)
   const login = useMutation({ mutationFn: authApi.login })
+  const qqStatus = useQuery({ queryKey: ['qq-status'], queryFn: authApi.qqStatus, staleTime: 60_000 })
+
+  const handleQqLogin = async () => {
+    setQqLoading(true)
+    try {
+      const result = await authApi.qqAuthorize()
+      window.location.assign(result.url)
+    } catch (error) {
+      message.error(error instanceof ApiError ? error.message : 'QQ 登录暂不可用')
+      setQqLoading(false)
+    }
+  }
 
   useEffect(() => {
     if (token) navigate('/', { replace: true })
@@ -88,6 +102,21 @@ export function LoginPage() {
           {login.isPending ? '登录中…' : '进入题库'}
         </Button>
       </Form>
+      {qqStatus.data?.enabled && (
+        <div className="auth-oauth">
+          <div className="auth-oauth__divider"><span>或</span></div>
+          <Button
+            block
+            size="large"
+            className="auth-oauth-button"
+            icon={<AppIcon icon="simple-icons:qq" size={18} />}
+            loading={qqLoading}
+            onClick={() => void handleQqLogin()}
+          >
+            使用 QQ 登录
+          </Button>
+        </div>
+      )}
       <div className="auth-links">
         <Link to="/reset-password">忘记密码</Link>
         <Link to="/register">还没有账号？注册</Link>

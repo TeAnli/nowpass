@@ -29,8 +29,27 @@ export interface EmailCodePayload {
   captchaCode: string
 }
 
+export interface QqStatus {
+  enabled: boolean
+}
+
+export interface QqAuthorize {
+  url: string
+}
+
 export const authApi = {
   captcha: () => apiRequest<CaptchaResponse>('/api/auth/captcha', { auth: false }),
+
+  qqStatus: () => apiRequest<QqStatus>('/api/auth/qq/status', { auth: false }),
+
+  qqAuthorize: () => apiRequest<QqAuthorize>('/api/auth/qq/authorize', { auth: false }),
+
+  qqExchange: (ticket: string) =>
+    apiRequest<LoginResult>('/api/auth/qq/exchange', {
+      method: 'POST',
+      body: { ticket },
+      auth: false,
+    }),
 
   login: (payload: LoginPayload) =>
     apiRequest<LoginResult>('/api/auth/login', { method: 'POST', body: payload, auth: false }),

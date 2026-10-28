@@ -59,6 +59,17 @@
 .auth-card__head p:last-child { margin: 0; color: var(--color-text-secondary); font-size: var(--text-sm); }
 .auth-alert { margin-bottom: var(--space-5); }
 .auth-submit { margin-top: var(--space-2); }
+.auth-oauth { margin-top: var(--space-5); }
+.auth-oauth__divider { display: flex; align-items: center; gap: 10px; color: var(--color-text-muted); font-size: var(--text-xs); }
+.auth-oauth__divider::before,
+.auth-oauth__divider::after { content: ""; flex: 1; height: 1px; background: var(--color-border); }
+.auth-oauth-button { height: 44px; margin-top: var(--space-3); border-color: var(--color-border-strong); background: var(--color-surface); color: var(--color-text); }
+.auth-oauth-button:hover { border-color: var(--color-primary) !important; background: var(--color-surface-muted) !important; color: var(--color-text) !important; }
+.qq-callback-loading { display: flex; align-items: center; gap: 10px; padding: var(--space-4) 0; color: var(--color-text-secondary); font-size: var(--text-sm); }
+.qq-callback-spinner { width: 18px; height: 18px; border: 2px solid var(--color-border-strong); border-top-color: var(--color-primary); border-radius: 50%; animation: qq-spin 700ms linear infinite; }
+@keyframes qq-spin { to { transform: rotate(360deg); } }
+.auth-back-link { display: inline-flex; align-items: center; gap: 5px; margin-top: var(--space-3); color: var(--color-primary); font-size: var(--text-sm); }
+.auth-cancel-link { display: block; margin-top: var(--space-2); color: var(--color-text-muted); }
 .auth-links { display: flex; justify-content: space-between; gap: var(--space-4); margin-top: var(--space-5); font-size: var(--text-sm); }
 .auth-main__foot { margin-top: var(--space-5); color: var(--color-text-muted); font-size: var(--text-xs); }
 .captcha-button.ant-btn { height: 44px; min-width: 140px; padding: 0 6px; }

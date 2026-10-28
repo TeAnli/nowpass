@@ -23,6 +23,12 @@ object CacheKeys {
     /** 邮箱验证码：email_code:{scene}:{email} -> 验证码 */
     const val EMAIL_CODE_PREFIX = "email_code:"
 
+    /** QQ OAuth state：oauth:qq:state:{state} */
+    const val OAUTH_QQ_STATE_PREFIX = "oauth:qq:state:"
+
+    /** QQ 一次性登录票据：oauth:qq:ticket:{ticket} -> tokenId */
+    const val OAUTH_QQ_TICKET_PREFIX = "oauth:qq:ticket:"
+
     fun loginToken(tokenId: String): String = LOGIN_TOKEN_PREFIX + tokenId
 
     fun captcha(uuid: String): String = CAPTCHA_PREFIX + uuid
@@ -34,4 +40,8 @@ object CacheKeys {
     fun pwdLock(username: String): String = PWD_LOCK_PREFIX + username
 
     fun emailCode(scene: String, email: String): String = "$EMAIL_CODE_PREFIX$scene:$email"
+
+    fun oauthQqState(state: String): String = OAUTH_QQ_STATE_PREFIX + state
+
+    fun oauthQqTicket(ticket: String): String = OAUTH_QQ_TICKET_PREFIX + ticket
 }

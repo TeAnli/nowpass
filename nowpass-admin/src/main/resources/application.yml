@@ -79,6 +79,14 @@ nowpass:
     playback-url-minutes: 120
     max-video-bytes: 524288000
     max-cover-bytes: 5242880
+  qq:
+    enabled: ${QQ_OAUTH_ENABLED:false}
+    app-id: ${QQ_APP_ID:}
+    app-key: ${QQ_APP_KEY:}
+    redirect-uri: ${QQ_REDIRECT_URI:http://127.0.0.1:8088/api/auth/qq/callback}
+    frontend-redirect-uri: ${QQ_FRONTEND_REDIRECT_URI:http://127.0.0.1:8088/oauth/qq/callback}
+    state-minutes: 5
+    ticket-minutes: 2
 
 logging:
   level:

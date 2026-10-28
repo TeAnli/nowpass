@@ -58,6 +58,10 @@ class SecurityConfig(
                         "/api/auth/register",
                         "/api/auth/email-code",
                         "/api/auth/reset-password",
+                        "/api/auth/qq/status",
+                        "/api/auth/qq/authorize",
+                        "/api/auth/qq/callback",
+                        "/api/auth/qq/exchange",
                     ).permitAll()
                     .requestMatchers(
                         "/swagger-ui.html",

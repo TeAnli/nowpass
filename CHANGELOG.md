@@ -10,6 +10,22 @@
 - 前端真实接口联调（需先启动 `docker compose up -d`）
 - 生产部署时将 `frontend/dist` 打包进后端静态资源
 
+## [0.12.0] - 2026-10-28
+
+### 新增
+- 登录页支持 QQ 互联 OAuth 登录，未配置时自动隐藏入口
+- 新增 `user_oauth` 身份表与 V8 迁移，支持 QQ openid 复用
+- 首次 QQ 登录自动创建普通用户并签发 NowPass 登录态
+- 新增 state 防重放、2 分钟一次性 ticket 与前端回调页
+- 新增 `/api/auth/qq/status|authorize|callback|exchange` 四个接口
+- 新增 `docs/10-qq-oauth.md` 配置与安全说明
+
+### 验证
+- V8 迁移成功
+- 未配置时 `/api/auth/qq/status` 返回 `enabled=false`，登录页不显示 QQ 按钮
+- 未配置 authorize 返回 699，不会发起无效跳转
+- 前端 TypeScript / 构建通过，容器 healthy
+
 ## [0.11.0] - 2026-10-27
 
 ### 新增

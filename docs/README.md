@@ -11,3 +11,4 @@
 | [07-docker.md](07-docker.md) | 全栈 Docker 构建、运行、配置与生产建议 |
 | [08-ai-interview.md](08-ai-interview.md) | AI 面试官、语音输入、模型配置与安全边界 |
 | [09-video.md](09-video.md) | 视频讲解、MinIO 私有桶、上传/发布/清理 |
+| [10-qq-oauth.md](10-qq-oauth.md) | QQ 互联 OAuth 登录、回调、配置与安全说明 |

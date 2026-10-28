@@ -123,7 +123,7 @@ export function RoadmapPage() {
           <p className="eyebrow">PRACTICE ROUTE / 刷题路线</p>
           <h1>一次只走一站，<br />不要一口气刷完。</h1>
           <p className="page-heading__lead">
-            路线把题库拆成五个阶段。完成一站再进入下一站，用“能否讲清楚”而不是“做了多少题”判断是否过关。
+            路线把题库拆成七个阶段。完成一站再进入下一站，用“能否讲清楚”而不是“做了多少题”判断是否过关。
           </p>
         </div>
         <div className="roadmap-progress" aria-label={`路线完成度 ${percent}%`}>

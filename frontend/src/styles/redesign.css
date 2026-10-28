@@ -2127,4 +2127,136 @@ body {
   .home-page { gap: 24px; padding-top: 20px; }
 }
 
+/* Compact secondary pages: tighter headers, lists and cards */
+.page-container { padding-top: clamp(32px, 4vw, 56px); }
+.home-page { padding-top: clamp(28px, 4vw, 44px); }
+
+/* Question bank */
+.question-index .page-heading {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding-bottom: 16px;
+  text-align: left;
+}
+.question-index .page-heading__row { justify-content: flex-start; align-items: baseline; gap: 12px; }
+.question-index .page-heading h1 { font-size: clamp(2rem, 3.4vw, 2.8rem); letter-spacing: -0.04em; }
+.question-index .page-heading__lead { max-width: 72ch; margin: 0; font-size: 0.95rem; line-height: 1.7; }
+.bank-page { gap: 22px; }
+.bank-page .text-link { margin-top: 7px; font-size: 12px; }
+.bank-hot, .bank-categories { gap: 12px; }
+.bank-hot__grid { gap: 10px; }
+.bank-hot__card { min-height: 108px; padding: 12px 13px; border-radius: 6px; }
+.bank-hot__card strong { font-size: 13px; }
+.filters {
+  width: 100%;
+  margin: 0;
+  padding: 13px;
+  border-radius: 7px;
+  box-shadow: none;
+}
+.question-index .question-list { width: 100%; padding: 0 12px; border-radius: 7px; box-shadow: none; }
+.question-row { min-height: 78px; padding: 10px 8px; }
+.question-row__title { font-size: 1rem; }
+.question-row__meta { gap: 6px 10px; }
+.question-row__index { width: 30px; height: 30px; }
+
+/* Knowledge topics */
+.topics-page { gap: 24px; }
+.topics-header {
+  grid-template-columns: minmax(0, 1fr) 250px;
+  gap: 24px;
+  align-items: end;
+}
+.topics-header h1 {
+  margin: 8px 0 10px;
+  font-size: clamp(2rem, 3.5vw, 2.8rem);
+  line-height: 1.08;
+}
+.topics-header .page-heading__lead { max-width: 68ch; font-size: 0.95rem; line-height: 1.7; }
+.topics-summary { padding: 14px 16px; border-radius: 8px; box-shadow: none; }
+.topics-summary strong { font-size: 1.4rem; }
+.topics-summary > div { padding: 5px 0; }
+.topics-summary .hero-action { min-height: 38px; margin-top: 10px; border-radius: 5px; font-size: 12px; }
+.topics-index { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+
+/* Roadmap */
+.roadmap-page { gap: 22px; }
+.roadmap-header { grid-template-columns: minmax(0, 1fr) 260px; gap: 24px; align-items: end; }
+.roadmap-header h1 { margin: 8px 0 10px; font-size: clamp(2rem, 3.5vw, 2.8rem); }
+.roadmap-header .page-heading__lead { max-width: 68ch; font-size: 0.95rem; line-height: 1.7; }
+.roadmap-progress { padding: 14px 16px; border-radius: 8px; box-shadow: none; }
+.roadmap-progress__value { font-size: 2rem; }
+.roadmap-progress__bar { margin: 8px 0; }
+.roadmap-stage { grid-template-columns: 42px minmax(0, 1fr); gap: 12px; }
+.roadmap-stage__rail { padding-top: 16px; }
+.roadmap-stage__number { width: 30px; height: 30px; }
+.roadmap-stage__card { padding: 14px 16px; border-radius: 8px; }
+.roadmap-stage__head h2 { font-size: 1.15rem; }
+.roadmap-stage__icon { width: 34px; height: 34px; border-radius: 9px; }
+.roadmap-stage__desc { margin: 8px 0 10px; font-size: 12px; line-height: 1.7; }
+.roadmap-stage__foot { gap: 8px; }
+.roadmap-check { padding: 5px 9px; font-size: 11px; }
+.roadmap-tag { padding: 3px 7px; font-size: 10px; }
+.roadmap-stage__link { font-size: 12px; }
+
+/* Video library */
+.videos-page { gap: 24px; }
+.videos-heading { grid-template-columns: minmax(0, 1fr) 250px; gap: 24px; align-items: end; }
+.videos-heading h1 { margin: 8px 0 10px; font-size: clamp(2rem, 3.5vw, 2.8rem); line-height: 1.08; }
+.videos-heading .page-heading__lead { max-width: 68ch; font-size: 0.95rem; line-height: 1.7; }
+.videos-heading__meta { padding: 12px 16px; border-radius: 8px; box-shadow: none; }
+.videos-heading__meta strong { font-size: 1.4rem; }
+.video-filters { padding: 10px; border-radius: 6px; }
+.video-grid { gap: 14px; }
+.video-card { border-radius: 9px; box-shadow: none; }
+.video-card__body { padding: 11px 12px 12px; }
+.video-card__body h2 { margin: 6px 0 9px; font-size: 0.95rem; line-height: 1.5; }
+.video-card__meta { font-size: 9px; }
+.video-detail-page { gap: 16px; }
+.video-detail-head h1 { margin: 4px 0 8px; font-size: clamp(1.7rem, 2.8vw, 2.35rem); }
+.video-detail-description { margin: 16px 0; font-size: 0.95rem; line-height: 1.75; }
+.video-detail-tags { margin-bottom: 16px; }
+
+/* AI interview */
+.interview-page { gap: 20px; }
+.interview-heading h1 { margin: 8px 0 10px; font-size: clamp(2rem, 3.5vw, 2.8rem); }
+.interview-heading .page-heading__lead { font-size: 0.95rem; line-height: 1.7; }
+.interview-heading__meta { padding: 8px 12px; }
+.interview-layout { grid-template-columns: 280px minmax(0, 1fr); gap: 16px; }
+.interview-side { padding: 16px; }
+.interview-side__head h2 { font-size: 1.35rem; }
+.interview-room { min-height: 560px; }
+.interview-room__head { padding: 12px 16px; }
+.interview-room__head p { font-size: 10px; }
+.chat-list { min-height: 340px; max-height: 54vh; padding: 16px; }
+.interview-composer { padding: 12px 16px 16px; }
+.interview-error { margin: 0 16px 10px; }
+
+/* Profile */
+.profile-page .page-heading { padding-bottom: 20px; }
+.profile-page .page-heading h1 { font-size: 2.4rem; }
+.profile-grid { grid-template-columns: 300px minmax(0, 1fr); gap: 18px; }
+.profile-card { padding: 20px; border-radius: 10px; }
+.profile-card h2 { font-size: 1.55rem; }
+.profile-forms { gap: 14px; }
+.form-card { padding: 20px; border-radius: 10px; }
+
+@media (max-width: 900px) {
+  .topics-header, .roadmap-header, .videos-heading { grid-template-columns: 1fr; gap: 18px; }
+  .topics-index { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .interview-layout { grid-template-columns: 1fr; }
+  .profile-grid { grid-template-columns: 1fr; }
+  .profile-card { max-width: none; }
+}
+@media (max-width: 640px) {
+  .page-container { padding-top: 24px; }
+  .question-index .page-heading h1 { font-size: 2rem; }
+  .topics-index { grid-template-columns: 1fr; }
+  .roadmap-stage { grid-template-columns: 34px minmax(0, 1fr); gap: 8px; }
+  .roadmap-stage__card { padding: 12px; }
+  .video-detail-head h1 { font-size: 1.7rem; }
+  .profile-card, .form-card { padding: 16px; }
+}
+
 

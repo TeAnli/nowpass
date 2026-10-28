@@ -28,23 +28,19 @@ export function TopicsPage() {
         </div>
       </header>
 
-      <div className="knowledge-grid topics-grid">
+      <div className="topic-index topics-index">
         {(categories.data ?? []).map((category, index) => {
           const meta = categoryMeta(category.name, index)
           return (
-            <Link className="knowledge-card topics-card" key={category.id} to={`/questions?categoryId=${category.id}`}>
-              <span className="knowledge-card__icon topics-card__icon">
-                <AppIcon icon={category.icon || meta.icon} size={26} />
+            <Link className="topic-row" key={category.id} to={`/questions?categoryId=${category.id}`}>
+              <span className="topic-row__index mono">{String(index + 1).padStart(2, '0')}</span>
+              <span className="topic-row__icon"><AppIcon icon={category.icon || meta.icon} size={18} /></span>
+              <span className="topic-row__body">
+                <strong>{category.name}</strong>
+                <small>{meta.description}</small>
               </span>
-              <div className="knowledge-card__body">
-                <h3>{category.name}</h3>
-                <p>{meta.description}</p>
-              </div>
-              <div className="knowledge-card__foot">
-                <span>{category.questionCount} 道题</span>
-                <span className="knowledge-card__hint">{meta.routeHint}</span>
-                <AppIcon icon="lucide:arrow-right" size={16} />
-              </div>
+              <span className="topic-row__count mono">{category.questionCount}</span>
+              <AppIcon icon="lucide:arrow-right" size={14} />
             </Link>
           )
         })}

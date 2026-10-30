@@ -51,10 +51,11 @@ https://nowpass.example.com/api/auth/qq/callback
 https://nowpass.example.com/api/auth/qq/callback
 ```
 
-5. 提交审核。审核通过后，在应用详情页获取：
+5. 创建应用后，在应用详情页获取：
    - `AppID`
    - `AppKey`
-6. 确认应用状态为「已上线」后再测试登录。
+6. 用这对凭据配置项目并把 QQ 登录跑通，然后提交上线审核；审核通过后应用状态变为「已上线」。
+7. 在「应用接口」中确认「QQ 登录」/获取用户信息权限已开通。
 
 注意：
 

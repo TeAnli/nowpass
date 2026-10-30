@@ -12,3 +12,4 @@
 | [08-ai-interview.md](08-ai-interview.md) | AI 面试官、语音输入、模型配置与安全边界 |
 | [09-video.md](09-video.md) | 视频讲解、MinIO 私有桶、上传/发布/清理 |
 | [10-qq-oauth.md](10-qq-oauth.md) | QQ 互联 OAuth 登录、回调、配置与安全说明 |
+| [11-question-curation.md](11-question-curation.md) | 题库选题规范、原创题与外部题库导入边界 |

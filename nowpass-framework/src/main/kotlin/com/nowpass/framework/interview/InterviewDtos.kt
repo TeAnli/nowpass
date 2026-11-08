@@ -3,6 +3,7 @@ package com.nowpass.framework.interview
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
+import jakarta.validation.constraints.Pattern
 import jakarta.validation.constraints.Size
 
 data class InterviewMessage(
@@ -20,6 +21,15 @@ data class InterviewChatRequest(
 
     @field:Size(max = 20, message = "对话历史不能超过 20 条")
     val history: List<@Valid InterviewMessage> = emptyList(),
+
+    @field:Pattern(regexp = "chat|hint|review", message = "不支持的面试操作")
+    val action: String = "chat",
+)
+
+data class InterviewStatusResponse(
+    val configured: Boolean,
+    val model: String?,
+    val provider: String,
 )
 
 data class InterviewChatResponse(

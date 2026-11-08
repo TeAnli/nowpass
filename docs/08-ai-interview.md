@@ -54,9 +54,9 @@
 示例（DeepSeek）：
 
 ```bash
-INTERVIEW_BASE_URL=https://api.deepseek.com/v1
+INTERVIEW_BASE_URL=https://api.deepseek.com
 INTERVIEW_API_KEY=sk-...
-INTERVIEW_MODEL=deepseek-chat
+INTERVIEW_MODEL=deepseek-flash
 docker compose --profile app up -d --build backend
 ```
 
@@ -72,9 +72,7 @@ INTERVIEW_MODEL=qwen-plus
 
 ## 4. 本地开发
 
-```bash
-INTERVIEW_API_KEY=sk-... pnpm dev
-```
+后端进程需要设置 `INTERVIEW_API_KEY`、`INTERVIEW_BASE_URL` 和 `INTERVIEW_MODEL` 环境变量；前端执行 `pnpm dev`，不接触模型密钥。宿主机直接运行后端时不会自动加载 Compose 的 `.env`。
 
 后端仍从环境变量读取配置；未配置密钥时接口返回 `local` 模式的固定追问，适合没有模型账号时演示。
 
@@ -84,4 +82,24 @@ INTERVIEW_API_KEY=sk-... pnpm dev
 - 提示词包含当前题目的标准答案，仅用于评估；系统提示要求不要整段念答案，但模型仍可能泄露部分答案，这是模拟面试的取舍。
 - 用户输入可能包含提示注入，生产环境建议加输入过滤、调用频率限制和用量上限。
 - 语音识别依赖浏览器厂商服务，离线或受限网络下可能不可用。
-- 当前没有会话持久化、评分报告和并发用量统计。
+- 当前没有会话持久化、数字评分和并发用量统计；结束点评按最近 20 条消息生成。
+
+
+## 6. 面试房间交互与摄像头
+
+- `GET /api/interview/status` 返回 `configured`、`model`、`provider`，需要登录，不返回密钥。配置状态不代表上游服务可用。
+- `POST /api/interview/chat` 增加可选 `action`：`chat`（默认追问）、`hint`（提示）、`review`（结束点评），兼容旧客户端。
+- DeepSeek 成功响应的 `provider` 为 `deepseek`；其他兼容服务仍为 `openai`。没有密钥为 `local`，上游失败为 `local-fallback`，页面会明确提示。
+- 客户端显示完整本场对话，每次仅发送最近 20 条，每条最多 4000 字。点评也仅基于这部分上下文；本地模式只提供练习建议，不伪造 AI 评分。
+- 点「结束并点评」生成 Markdown 回顾并停止计时，可导出当前对话为 Markdown；刷新或离开会清空记录。
+- 点「开启摄像头」才调用浏览器 `getUserMedia` 申请视频权限，不同时申请麦克风。视频静音、镜像、仅本地预览，不录制、不上传、不送入模型。
+- 拒绝权限、未检测到设备、设备占用都有可重试的提示；授权等待可取消。关闭、切题、结束或离开页面均停止视频轨道，取消后迟到的授权流也会释放。
+- 摄像头需要 HTTPS 或 `localhost` / `127.0.0.1`，局域网普通 HTTP 地址不能申请权限。参见 [MDN getUserMedia](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia)。
+
+本地 Docker 接入 DeepSeek：复制 `.env.example` 为 `.env`（已有 `.env` 时只补齐变量），填写 `INTERVIEW_API_KEY`，然后运行：
+
+```bash
+docker compose --profile app up -d --no-build --force-recreate backend
+```
+
+模型默认示例 `deepseek-flash`，接口地址 `https://api.deepseek.com`；按账号支持的模型调整，参见 [DeepSeek 官方 API 文档](https://api-docs.deepseek.com/)。不要把 `.env` 提交到 Git。

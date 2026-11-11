@@ -3,6 +3,8 @@ import type {
   PageResult,
   VideoAdminItem,
   VideoCategory,
+  VideoCommentItem,
+  VideoDanmakuItem,
   VideoDetail,
   VideoListItem,
   VideoQuery,
@@ -16,6 +18,20 @@ export const videoApi = {
   playUrl: (id: number) => apiRequest<{ url: string }>(`/api/videos/${id}/play`),
   tags: () => apiRequest<string[]>('/api/videos/tags'),
   categories: () => apiRequest<VideoCategory[]>('/api/videos/categories'),
+  comments: (id: number, page: number, pageSize = 10) =>
+    apiRequest<PageResult<VideoCommentItem>>(
+      `/api/videos/${id}/comments${toQueryString({ page, pageSize })}`,
+    ),
+  addComment: (id: number, content: string) =>
+    apiRequest<VideoCommentItem>(`/api/videos/${id}/comments`, {
+      method: 'POST',
+      body: { content },
+    }),
+  removeComment: (id: number, commentId: number) =>
+    apiRequest<void>(`/api/videos/${id}/comments/${commentId}`, { method: 'DELETE' }),
+  danmaku: (id: number) => apiRequest<VideoDanmakuItem[]>(`/api/videos/${id}/danmaku`),
+  sendDanmaku: (id: number, payload: { content: string; timeMs: number; color?: string; mode?: string }) =>
+    apiRequest<VideoDanmakuItem>(`/api/videos/${id}/danmaku`, { method: 'POST', body: payload }),
 }
 
 export const adminVideoApi = {

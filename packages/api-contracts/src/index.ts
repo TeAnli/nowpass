@@ -109,6 +109,29 @@ export interface VideoDetail {
   publishedAt: string | null
 }
 
+export interface VideoCommentItem {
+  id: number
+  videoId: number
+  userId: number
+  nickname: string
+  content: string
+  createTime: string
+}
+
+export type DanmakuMode = 'scroll' | 'top' | 'bottom'
+
+export interface VideoDanmakuItem {
+  id: number
+  videoId: number
+  userId: number
+  nickname: string
+  content: string
+  timeMs: number
+  color: string
+  mode: DanmakuMode
+  createTime: string
+}
+
 export interface VideoAdminItem extends VideoListItem {
   description: string | null
   questionId: number | null

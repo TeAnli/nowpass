@@ -7,7 +7,7 @@
 | 路由 | 说明 |
 |---|---|
 | `/videos` | 视频列表，分类/标签/关键词筛选，每页 12 条 |
-| `/videos/:id` | 播放页，标题信息在播放器上方，单列布局；原生进度/倍速记忆 |
+| `/videos/:id` | 播放页，标题信息在播放器上方，单列布局；原生进度/倍速记忆，支持弹幕与评论 |
 | `/admin/videos` | 后台视频管理 |
 | `/admin/video-categories` | 后台视频分类管理 |
 
@@ -35,12 +35,15 @@
   - `/` 快捷键说明
 - 按住鼠标右键或长按 `→` **约 450ms** 后临时 2× 快进，松开恢复原倍速；短按不触发加速，浏览器右键菜单被阻止
 - 播放进度与倍速、音量、静音状态存 `localStorage`
-
+- 弹幕层按视频时间点叠加，支持滚动、顶部固定和底部固定三种位置；暂停时动画暂停
+- 播放器下方可发送当前时间点弹幕，按 Enter 或点击发送
 
 ## 2. 数据
 
 - `video_category`：独立分类，`name` + `sort`
 - `video`：标题、简介、讲师、分类、可空 `question_id`、`tags text[]`、视频/封面 object key、时长、大小、状态
+- `video_comment`：视频评论，软删除，记录作者与时间
+- `video_danmaku`：时间点弹幕，`time_ms`、颜色、位置（`scroll` / `top` / `bottom`）
 - 状态：`draft` / `published` / `offline`
 - 分类下有视频时拒绝删除
 - 删除为软删除，对象延迟清理
@@ -101,6 +104,18 @@ CORS 由 MinIO 的 `MINIO_API_CORS_ALLOW_ORIGIN` 配置，默认允许 `127.0.0.
 | GET | `/api/videos/tags` |
 | GET | `/api/videos/{id}` |
 | GET | `/api/videos/{id}/play` |
+| GET | `/api/videos/{id}/comments?page=&pageSize=` |
+| POST | `/api/videos/{id}/comments` |
+| DELETE | `/api/videos/{id}/comments/{commentId}` |
+| GET | `/api/videos/{id}/danmaku` |
+| POST | `/api/videos/{id}/danmaku` |
+
+互动规则：
+
+- 评论最多 500 字，弹幕最多 60 字
+- 评论仅登录用户可发表，本人或管理员可删除
+- 弹幕支持 `scroll`、`top`、`bottom`，颜色为 `#RRGGBB`
+- 评论限流 8 次/分钟，弹幕限流 20 次/分钟
 
 后台：
 

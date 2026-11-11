@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import type { CSSProperties, MouseEvent as ReactMouseEvent } from 'react'
+import type { VideoDanmakuItem } from '@nowpass/api-contracts'
 import { AppIcon } from '@/components/AppIcon'
+import { DanmakuOverlay } from '@/components/DanmakuOverlay'
 import { formatVideoDuration } from '@/lib/format'
 
 interface VideoPlayerProps {
@@ -10,6 +12,8 @@ interface VideoPlayerProps {
   progressKey: string
   wide: boolean
   onToggleWide: () => void
+  danmaku?: VideoDanmakuItem[]
+  onTimeUpdate?: (seconds: number) => void
 }
 
 const RATE_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5, 2]
@@ -18,7 +22,7 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value))
 }
 
-export function VideoPlayer({ src, poster, title, progressKey, wide, onToggleWide }: VideoPlayerProps) {
+export function VideoPlayer({ src, poster, title, progressKey, wide, onToggleWide, danmaku = [], onTimeUpdate }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const shellRef = useRef<HTMLDivElement | null>(null)
   const progressRef = useRef<HTMLDivElement | null>(null)
@@ -291,6 +295,7 @@ export function VideoPlayer({ src, poster, title, progressKey, wide, onToggleWid
     const element = videoRef.current
     if (!element) return
     setCurrent(element.currentTime)
+    onTimeUpdate?.(element.currentTime)
     if (!rememberProgress) return
     const second = Math.floor(element.currentTime)
     if (Math.abs(second - lastSavedRef.current) < 2) return
@@ -379,6 +384,8 @@ export function VideoPlayer({ src, poster, title, progressKey, wide, onToggleWid
         onEnded={handleEnded}
         onError={handleError}
       />
+
+      <DanmakuOverlay items={danmaku} currentTime={current} playing={playing} />
 
       {!playing && (
         <button type="button" className="video-center-play" onClick={() => void togglePlay()} aria-label="播放视频">

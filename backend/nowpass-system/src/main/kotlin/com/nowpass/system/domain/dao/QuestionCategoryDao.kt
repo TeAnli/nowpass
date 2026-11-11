@@ -2,6 +2,7 @@ package com.nowpass.system.domain.dao
 
 import com.nowpass.system.domain.model.QuestionCategory
 import com.nowpass.system.domain.table.QuestionCategoryTable
+import com.nowpass.system.domain.table.QuestionMajorCategoryTable
 import com.nowpass.system.domain.table.QuestionTable
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
@@ -27,23 +28,38 @@ class QuestionCategoryDao {
             .where { QuestionTable.deleted eq false }
             .groupBy(QuestionTable.categoryId)
             .associate { it[QuestionTable.categoryId] to it[questionCount] }
+        val majorById = QuestionMajorCategoryTable.select(
+            QuestionMajorCategoryTable.id,
+            QuestionMajorCategoryTable.name,
+            QuestionMajorCategoryTable.sort,
+        )
+            .where { QuestionMajorCategoryTable.deleted eq false }
+            .associateBy({ it[QuestionMajorCategoryTable.id] }) {
+                it[QuestionMajorCategoryTable.name] to it[QuestionMajorCategoryTable.sort]
+            }
 
         return QuestionCategoryTable.select(
             QuestionCategoryTable.id,
             QuestionCategoryTable.name,
             QuestionCategoryTable.icon,
             QuestionCategoryTable.sort,
+            QuestionCategoryTable.majorCategoryId,
         )
             .where { QuestionCategoryTable.deleted eq false }
             .orderBy(QuestionCategoryTable.sort to SortOrder.ASC)
             .map { row ->
                 val id = row[QuestionCategoryTable.id]
+                val majorId = row[QuestionCategoryTable.majorCategoryId]
+                val major = majorId?.let { majorById[it] }
                 QuestionCategory(
                     id = id,
                     name = row[QuestionCategoryTable.name],
                     icon = row[QuestionCategoryTable.icon],
                     sort = row[QuestionCategoryTable.sort],
                     questionCount = counts[id] ?: 0L,
+                    majorCategoryId = majorId,
+                    majorCategoryName = major?.first,
+                    majorCategorySort = major?.second,
                 )
             }
     }

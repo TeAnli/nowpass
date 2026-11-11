@@ -72,6 +72,9 @@ export interface QuestionCategory {
   icon: string | null
   sort: number
   questionCount: number
+  majorCategoryId?: number | null
+  majorCategoryName?: string | null
+  majorCategorySort?: number | null
 }
 
 export interface VideoCategory {

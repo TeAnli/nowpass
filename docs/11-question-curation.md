@@ -61,7 +61,7 @@ docker exec nowpass-postgres psql -U nowpass -d nowpass \
   -c "select count(*) from question where deleted=false;"
 ```
 
-当前结果：`90` 道题、23 个有题分类；分类库 43 个，归属 12 个大类，另有 20 个分类待补题。V9、V11、V12、V13、V14 迁移成功。完整题目清单见 [13-question-bank.md](13-question-bank.md)。
+当前结果：`131` 道题、43 个分类，每个分类至少 2 道题，归属 12 个大类。V9、V11、V12、V13、V14、V15 迁移成功。完整题目清单见 [13-question-bank.md](13-question-bank.md)。
 
 ## 5. 如果以后要导入外部题库
 

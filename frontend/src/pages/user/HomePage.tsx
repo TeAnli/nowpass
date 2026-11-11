@@ -63,11 +63,11 @@ export function HomePage() {
             <h2 id="knowledge-title">按知识点读</h2>
           </div>
           <Link to="/topics" className="home-section__link">
-            查看全部 <AppIcon icon="lucide:arrow-up-right" size={14} />
+            查看全部 {formatCount(categories.data?.length ?? 0)} 个 <AppIcon icon="lucide:arrow-up-right" size={14} />
           </Link>
         </div>
         <div className="topic-index">
-          {(categories.data ?? []).map((category, index) => {
+          {(categories.data ?? []).slice(0, 6).map((category, index) => {
             const meta = categoryMeta(category.name, index)
             return (
               <Link

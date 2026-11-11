@@ -2,12 +2,11 @@
 .gitignore
 .idea
 .vscode
-.gradle
-logs
+**/.gradle
 **/build
+**/dist
+**/node_modules
+logs
 **/*.iml
 docs
-frontend/node_modules
-frontend/dist
 frontend/.vite
-frontend/deploy

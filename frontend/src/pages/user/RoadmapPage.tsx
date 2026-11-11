@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { AppIcon } from '@/components/AppIcon'
 import { catalogApi } from '@/api/catalog'
-import type { QuestionCategory } from '@/types/api'
+import type { QuestionCategory } from '@nowpass/api-contracts'
 
 const ROADMAP_KEY = 'nowpass.roadmap.done'
 

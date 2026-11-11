@@ -7,8 +7,40 @@
 ## [Unreleased]
 
 ### 计划中
-- 前端真实接口联调（需先启动 `docker compose up -d`）
+- 前端真实接口联调（需先启动 `pnpm docker:up`）
 - 生产部署时将 `frontend/dist` 打包进后端静态资源
+
+## [0.18.0] - 2026-11-12
+
+### 变更
+- 前端容器改用 OpenResty 提供静态资源与 `/api/` 反向代理
+- `docker-compose.yml` 迁入 `infra/docker-compose.yml`
+- Compose 构建上下文调整为仓库根目录，Dockerfile 与 OpenResty 配置统一从 `infra/` 引用
+- 根 `package.json` 新增 `docker:up`、`docker:app`、`docker:down` 脚本
+- `.dockerignore` 保留在仓库根目录，因为 Docker 只读取构建上下文根目录的忽略文件
+
+### 验证
+- `docker compose -f infra/docker-compose.yml --env-file .env config` 通过
+- 前后端镜像按新路径构建成功
+- 后端、前端容器 healthy，前端返回 200
+
+## [0.17.0] - 2026-11-12
+
+### 变更
+- Gradle Wrapper、`settings.gradle.kts`、`build.gradle.kts` 与后端模块整体迁入 `backend/`
+- 后端去掉 `backend/modules` 和 `backend/api` 层级，扁平化为 `backend/nowpass-common`、`nowpass-framework`、`nowpass-system`、`nowpass-admin`
+- Gradle 任务统一为 `:nowpass-admin:bootRun`、`:nowpass-admin:bootJar`
+- 根目录新增 pnpm workspace，前端包名改为 `@nowpass/web`
+- 新增 `packages/api-contracts`，集中存放共享 TypeScript 接口类型
+- Dockerfile 与反向代理配置迁入 `infra/`
+- 新增 `docs/12-monorepo.md`，更新 README、架构、数据库、开发与 Docker 文档
+
+### 验证
+- `cd backend && ./gradlew clean build` 通过
+- `pnpm install --frozen-lockfile` 通过
+- `pnpm --filter @nowpass/web typecheck` 与 `build` 通过
+- 前后端容器 healthy，前端 `http://127.0.0.1:8088` 返回 200
+- 题库数据未变化，仍为 60 道
 
 ## [0.15.0] - 2026-10-30
 

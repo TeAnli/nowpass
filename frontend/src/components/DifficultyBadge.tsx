@@ -1,5 +1,5 @@
 import { difficultyLabel } from '@/lib/format'
-import type { Difficulty } from '@/types/api'
+import type { Difficulty } from '@nowpass/api-contracts'
 
 export function DifficultyBadge({ value }: { value: Difficulty | string | null | undefined }) {
   const difficulty = value === 'easy' || value === 'medium' || value === 'hard' ? value : 'easy'

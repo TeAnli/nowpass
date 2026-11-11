@@ -15,7 +15,7 @@ import {
 import { Link, useSearchParams } from 'react-router-dom'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { catalogApi } from '@/api/catalog'
-import type { Difficulty, QuestionQuery, QuestionSort } from '@/types/api'
+import type { Difficulty, QuestionQuery, QuestionSort } from '@nowpass/api-contracts'
 import { AppIcon } from '@/components/AppIcon'
 import { DifficultyBadge } from '@/components/DifficultyBadge'
 import { ErrorState } from '@/components/ErrorState'

@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { LoginResult, UserProfile } from '@/types/api'
+import type { LoginResult, UserProfile } from '@nowpass/api-contracts'
 import { authStorage } from '@/lib/storage'
 import { authApi } from '@/api/auth'
 

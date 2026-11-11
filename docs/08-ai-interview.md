@@ -57,7 +57,7 @@
 INTERVIEW_BASE_URL=https://api.deepseek.com
 INTERVIEW_API_KEY=sk-...
 INTERVIEW_MODEL=deepseek-flash
-docker compose --profile app up -d --build backend
+docker compose -f infra/docker-compose.yml --env-file .env --profile app up -d --build backend
 ```
 
 示例（通义千问兼容模式）：
@@ -68,7 +68,7 @@ INTERVIEW_API_KEY=sk-...
 INTERVIEW_MODEL=qwen-plus
 ```
 
-不要把密钥写进 `docker-compose.yml` 或 Git。可以在本机 `.env` 中设置，生产环境使用 Secret。
+不要把密钥写进 `infra/docker-compose.yml` 或 Git。可以在本机 `.env` 中设置，生产环境使用 Secret。
 
 ## 4. 本地开发
 
@@ -99,7 +99,7 @@ INTERVIEW_MODEL=qwen-plus
 本地 Docker 接入 DeepSeek：复制 `.env.example` 为 `.env`（已有 `.env` 时只补齐变量），填写 `INTERVIEW_API_KEY`，然后运行：
 
 ```bash
-docker compose --profile app up -d --no-build --force-recreate backend
+docker compose -f infra/docker-compose.yml --env-file .env --profile app up -d --no-build --force-recreate backend
 ```
 
 模型默认示例 `deepseek-flash`，接口地址 `https://api.deepseek.com`；按账号支持的模型调整，参见 [DeepSeek 官方 API 文档](https://api-docs.deepseek.com/)。不要把 `.env` 提交到 Git。

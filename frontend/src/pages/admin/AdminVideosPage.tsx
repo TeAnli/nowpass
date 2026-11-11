@@ -21,7 +21,7 @@ import { AppIcon } from '@/components/AppIcon'
 import { PERMISSIONS, hasPermission } from '@/lib/permissions'
 import { formatDate, formatVideoDuration } from '@/lib/format'
 import { useAuthStore } from '@/store/auth'
-import type { VideoAdminItem, VideoCategory, VideoUpsertCommand } from '@/types/api'
+import type { VideoAdminItem, VideoCategory, VideoUpsertCommand } from '@nowpass/api-contracts'
 import { AdminPageHeader } from './AdminPageHeader'
 import { ErrorState } from '@/components/ErrorState'
 

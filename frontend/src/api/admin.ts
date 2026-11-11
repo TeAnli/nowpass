@@ -14,7 +14,7 @@ import type {
   RoleOption,
   UserListItem,
   UserQuery,
-} from '@/types/api'
+} from '@nowpass/api-contracts'
 
 export const adminApi = {
   listQuestions: (query: QuestionQuery) =>

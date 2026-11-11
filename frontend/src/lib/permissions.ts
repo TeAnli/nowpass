@@ -1,4 +1,4 @@
-import type { UserProfile } from '@/types/api'
+import type { UserProfile } from '@nowpass/api-contracts'
 
 export const PERMISSIONS = {
   questionAdd: 'question:add',

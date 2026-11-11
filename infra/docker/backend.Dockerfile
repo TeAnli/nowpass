@@ -3,19 +3,19 @@ FROM gradle:8.14.4-jdk21 AS build
 WORKDIR /workspace
 
 # 先复制构建脚本，利用 Docker 层缓存
-COPY gradle ./gradle
-COPY gradlew gradle.properties settings.gradle.kts build.gradle.kts ./
-COPY nowpass-common ./nowpass-common
-COPY nowpass-framework ./nowpass-framework
-COPY nowpass-system ./nowpass-system
-COPY nowpass-admin ./nowpass-admin
+COPY backend/gradle ./backend/gradle
+COPY backend/gradlew backend/gradle.properties backend/settings.gradle.kts backend/build.gradle.kts ./backend/
+COPY backend/nowpass-admin ./backend/nowpass-admin
+COPY backend/nowpass-common ./backend/nowpass-common
+COPY backend/nowpass-framework ./backend/nowpass-framework
+COPY backend/nowpass-system ./backend/nowpass-system
 
-RUN gradle :nowpass-admin:bootJar --no-daemon --console=plain
+RUN cd backend && gradle :nowpass-admin:bootJar --no-daemon --console=plain
 
 FROM eclipse-temurin:21-jre-alpine
 RUN addgroup -S nowpass && adduser -S nowpass -G nowpass
 WORKDIR /app
-COPY --from=build /workspace/nowpass-admin/build/libs/nowpass.jar /app/app.jar
+COPY --from=build /workspace/backend/nowpass-admin/build/libs/nowpass.jar /app/app.jar
 RUN chown -R nowpass:nowpass /app
 USER nowpass
 EXPOSE 18090

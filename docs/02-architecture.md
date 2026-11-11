@@ -3,23 +3,23 @@
 ## 1. 模块划分与依赖方向
 
 ```
-nowpass-admin      接口层：Controller、启动类、Flyway 脚本、打包
+backend/nowpass-admin             接口层：Controller、启动类、Flyway 脚本、打包
       ↓
-nowpass-framework  框架层：Exposed 事务、鉴权、验证码、限流、操作日志、邮件
+backend/nowpass-framework         框架层：Exposed 事务、鉴权、验证码、限流、操作日志、邮件
       ↓
-nowpass-system     领域层：Table 定义、DAO、Service、领域模型
+backend/nowpass-system            领域层：Table 定义、DAO、Service、领域模型
       ↓
-nowpass-common     通用层：R / PageResult / ErrorCode / 注解 / 常量（纯 Kotlin）
+backend/nowpass-common            通用层：R / PageResult / ErrorCode / 注解 / 常量（纯 Kotlin）
 ```
 
 **依赖严格单向**：`common` 不反向依赖任何模块。这条由编译器保证，不是靠自律。
 
 | 模块 | 允许放什么 | 禁止放什么 |
 |---|---|---|
-| `common` | 与框架无关的纯 Kotlin 类型 | servlet、Spring Bean、数据库访问 |
-| `system` | Exposed Table / DAO / Service / 领域模型 | 安全实现（密码编码、token）、HTTP 相关代码 |
-| `framework` | Spring 配置、过滤器、AOP、Redis、邮件 | Controller |
-| `admin` | Controller、请求 DTO、OpenAPI 配置 | 领域逻辑（一律下沉到 service） |
+| `backend/nowpass-common` | 与框架无关的纯 Kotlin 类型 | servlet、Spring Bean、数据库访问 |
+| `backend/nowpass-system` | Exposed Table / DAO / Service / 领域模型 | 安全实现（密码编码、token）、HTTP 相关代码 |
+| `backend/nowpass-framework` | Spring 配置、过滤器、AOP、Redis、邮件 | Controller |
+| `backend/nowpass-admin` | Controller、请求 DTO、OpenAPI 配置 | 领域逻辑（一律下沉到 service） |
 
 ## 2. 一次请求的处理链路
 
@@ -39,20 +39,20 @@ HTTP 请求
 
 ## 3. 分层职责的具体约定
 
-### Controller（`nowpass-admin`）
+### Controller（`backend/nowpass-admin`）
 
 - 只做三件事：**取参数 → 调 service → 包 `R`**，不写业务判断
 - 权限点用 `@PreAuthorize("hasAuthority('...')")`，字符串来自 `Permissions` 常量
 - 写操作加 `@Log(title, businessType)`
 - 敏感端点加 `@RateLimiter`
 
-### Service（`nowpass-system` / `nowpass-framework`）
+### Service（`backend/nowpass-system` / `backend/nowpass-framework`）
 
 - **业务校验前置**：如"选择题必须同时有选项与答案键"、"分类下有题目不许删"
 - 事务边界在 service 方法上（`@Transactional`），不在 DAO 上
 - 密码相关逻辑放 `framework`（`AuthService` / `UserAdminService`），`system` 只存已编码密码
 
-### DAO（`nowpass-system`）
+### DAO（`backend/nowpass-system`）
 
 - Exposed DSL 直写，**没有 XML**
 - 逻辑删除统一在 DAO 层显式过滤 `deleted = false`

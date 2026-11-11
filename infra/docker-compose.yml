@@ -70,12 +70,12 @@ services:
       timeout: 5s
       retries: 20
 
-  # ---------- 全栈容器化：docker compose --profile app up -d --build ----------
+  # ---------- 全栈容器化：docker compose -f infra/docker-compose.yml --profile app up -d --build ----------
   backend:
     profiles: ["app"]
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: infra/docker/backend.Dockerfile
     image: nowpass-backend:local
     container_name: nowpass-backend
     restart: unless-stopped
@@ -117,8 +117,8 @@ services:
   frontend:
     profiles: ["app"]
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: infra/docker/frontend.Dockerfile
     image: nowpass-frontend:local
     container_name: nowpass-frontend
     restart: unless-stopped

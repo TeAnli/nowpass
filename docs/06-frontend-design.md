@@ -1,6 +1,6 @@
 # 前端界面设计规范
 
-> 实施约定：Vite + React + TypeScript + Ant Design 5 + TanStack Query + Zustand + pnpm。本文是 `frontend/` 的视觉与交互依据，与 `docs/04-api.md` 的接口契约配套。
+> 实施约定：Vite + React + TypeScript + Ant Design 5 + TanStack Query + Zustand + pnpm。本文是 `frontend/` 的视觉与交互依据，与 `packages/api-contracts/` 的接口契约配套。
 
 ## 1. 设计方向
 

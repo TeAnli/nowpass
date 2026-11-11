@@ -1,5 +1,5 @@
 import { apiRequest } from '@/lib/api'
-import type { CaptchaResponse, LoginResult, UserProfile } from '@/types/api'
+import type { CaptchaResponse, LoginResult, UserProfile } from '@nowpass/api-contracts'
 
 export interface LoginPayload {
   username: string

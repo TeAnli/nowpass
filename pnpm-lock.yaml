@@ -6,7 +6,9 @@ settings:
 
 importers:
 
-  .:
+  .: {}
+
+  frontend:
     dependencies:
       '@ant-design/icons':
         specifier: ^6.0.0
@@ -14,6 +16,9 @@ importers:
       '@iconify/react':
         specifier: ^6.0.3
         version: 6.0.3(react@19.3.1)
+      '@nowpass/api-contracts':
+        specifier: workspace:*
+        version: link:../packages/api-contracts
       '@tanstack/react-query':
         specifier: ^5.90.0
         version: 5.105.0(@types/react@19.3.0)(react@19.3.1)
@@ -84,6 +89,8 @@ importers:
       vite:
         specifier: ^7.2.0
         version: 7.3.7(@types/node@24.19.2)
+
+  packages/api-contracts: {}
 
 packages:
 

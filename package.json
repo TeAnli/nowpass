@@ -1,0 +1,14 @@
+{
+  "name": "nowpass",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "scripts": {
+    "dev:web": "pnpm --filter @nowpass/web dev",
+    "build:web": "pnpm --filter @nowpass/web build",
+    "typecheck:web": "pnpm --filter @nowpass/web typecheck",
+    "lint:web": "pnpm --filter @nowpass/web lint",
+    "docker:up": "docker compose -f infra/docker-compose.yml --env-file .env up -d",
+    "docker:app": "docker compose -f infra/docker-compose.yml --env-file .env --profile app up -d --build",
+    "docker:down": "docker compose -f infra/docker-compose.yml --env-file .env down"
+  }
+}

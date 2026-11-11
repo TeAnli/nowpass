@@ -6,7 +6,7 @@ import { adminVideoApi } from '@/api/videos'
 import { AppIcon } from '@/components/AppIcon'
 import { PERMISSIONS, hasPermission } from '@/lib/permissions'
 import { useAuthStore } from '@/store/auth'
-import type { VideoCategory } from '@/types/api'
+import type { VideoCategory } from '@nowpass/api-contracts'
 import { AdminPageHeader } from './AdminPageHeader'
 import { ErrorState } from '@/components/ErrorState'
 

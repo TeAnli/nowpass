@@ -5,7 +5,7 @@
 | 组件 | 版本 | 说明 |
 |---|---|---|
 | JDK | 21 | `JAVA_HOME` 必须指向 21；本机 PATH 上可能是别的版本 |
-| Gradle | 8.14.4 | 已随 Wrapper 锁定，用 `./gradlew` 即可 |
+| Gradle | 8.14.4 | Wrapper 位于 `backend/`，在 `backend` 目录执行 `./gradlew` |
 | Docker | 任意 | 用于 PostgreSQL / Redis / Mailpit |
 | Kotlin | 2.3.21 | 由 Gradle 插件管理，无需单独安装 |
 
@@ -14,18 +14,24 @@
 
 ## 2. 启动步骤
 
+以下命令从仓库根目录开始。首次运行先复制环境变量模板。
+
 ```powershell
-# 0) 设置 JDK
+# 0) 准备环境变量
+Copy-Item .env.example .env
+
+# 1) 设置 JDK
 $env:JAVA_HOME = 'D:\Program Files\Java\jdk-21'
 $env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
 
-# 1) 起中间件（PostgreSQL 5434 / Redis 6379 / Mailpit 1025+8025）
-docker compose up -d
+# 2) 起中间件（PostgreSQL 5434 / Redis 6379 / Mailpit 1025+8025）
+pnpm docker:up
 
-# 2) 构建（含单元测试）
+# 3) 构建（含单元测试）
+cd backend
 ./gradlew build
 
-# 3) 运行
+# 4) 运行
 ./gradlew :nowpass-admin:bootRun
 # 或者
 java -jar nowpass-admin/build/libs/nowpass.jar
@@ -66,12 +72,13 @@ docker exec nowpass-redis redis-cli --scan --pattern 'rate_limit:*'
 docker exec -it nowpass-postgres psql -U nowpass -d nowpass
 
 # 重跑迁移（危险：会清库）
-docker compose down -v && docker compose up -d
+docker compose -f infra/docker-compose.yml --env-file .env down -v
+pnpm docker:up
 ```
 
 ## 5. 数据库迁移约定
 
-1. 脚本放在 `nowpass-admin/src/main/resources/db/migration/`，命名 `V{序号}__{描述}.sql`
+1. 脚本放在 `backend/nowpass-admin/src/main/resources/db/migration/`，命名 `V{序号}__{描述}.sql`
 2. **已执行过的脚本永不修改**，任何变更都新增版本号
 3. **Exposed 不负责建表**：不要打开 `createMissingTables`，表结构归 Flyway
 4. 改表后同步更新 `docs/03-database.md` 与对应的 Exposed `Table` 对象

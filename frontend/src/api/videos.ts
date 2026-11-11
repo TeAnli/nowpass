@@ -8,7 +8,7 @@ import type {
   VideoQuery,
   VideoUploadTicket,
   VideoUpsertCommand,
-} from '@/types/api'
+} from '@nowpass/api-contracts'
 
 export const videoApi = {
   list: (query: VideoQuery) => apiRequest<PageResult<VideoListItem>>(`/api/videos${toQueryString({ ...query })}`),

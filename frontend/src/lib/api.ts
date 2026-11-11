@@ -1,4 +1,4 @@
-import type { ApiEnvelope } from '@/types/api'
+import type { ApiEnvelope } from '@nowpass/api-contracts'
 import { authStorage } from '@/lib/storage'
 
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? ''

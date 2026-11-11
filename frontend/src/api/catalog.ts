@@ -6,7 +6,7 @@ import type {
   QuestionDetail,
   QuestionListItem,
   QuestionQuery,
-} from '@/types/api'
+} from '@nowpass/api-contracts'
 
 export const catalogApi = {
   listQuestions: (query: QuestionQuery) =>

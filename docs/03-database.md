@@ -2,7 +2,7 @@
 
 数据库：**PostgreSQL 16**（docker 容器，宿主机端口 **5434**）
 迁移工具：**Flyway 11.7.2**（`flyway-core` + `flyway-database-postgresql`）
-脚本位置：`nowpass-admin/src/main/resources/db/migration/`
+脚本位置：`backend/nowpass-admin/src/main/resources/db/migration/`
 
 ## 1. 约定
 

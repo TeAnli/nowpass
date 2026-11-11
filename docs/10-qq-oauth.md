@@ -72,7 +72,7 @@ QQ 浏览器会访问：
 https://nowpass.example.com/api/auth/qq/callback
 ```
 
-Nginx 需要把 `/api/` 转发到后端（项目自带 `frontend/deploy/nginx.conf` 已处理）：
+OpenResty 需要把 `/api/` 转发到后端（项目自带 `infra/openresty/default.conf` 已处理）：
 
 ```nginx
 location /api/ {
@@ -110,7 +110,7 @@ QQ_FRONTEND_REDIRECT_URI=https://nowpass.example.com/oauth/qq/callback
 然后重建后端：
 
 ```bash
-docker compose --profile app up -d --force-recreate backend
+docker compose -f infra/docker-compose.yml --env-file .env --profile app up -d --force-recreate backend
 ```
 
 前端不需要重新构建，登录页会通过 `/api/auth/qq/status` 自动显示 QQ 按钮。

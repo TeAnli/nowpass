@@ -10,6 +10,19 @@
 - 前端真实接口联调（需先启动 `pnpm docker:up`）
 - 生产部署时将 `frontend/dist` 打包进后端静态资源
 
+## [0.21.0] - 2026-11-12
+
+### 新增
+- 补充分类维度：Java 集合、后端场景、Go、MyBatis、Netty、C++、Python、C#、PHP、MongoDB、JavaScript、Vue、Git、Nginx、DevOps、AI 应用开发、AI Agent、前端手写代码、前端代码分析、系统运维
+- 分类库从 23 个扩展到 43 个
+- 前台分类接口只返回已有题目的分类，避免展示 0 题空分类
+
+### 验证
+- `V12__category_taxonomy.sql` 迁移成功
+- 分类库总数 43，有题分类仍为 23
+- 题库总数保持 90，前台分类接口仍返回 23 个有题分类
+- 后端构建通过，容器 healthy
+
 ## [0.20.0] - 2026-11-12
 
 ### 新增

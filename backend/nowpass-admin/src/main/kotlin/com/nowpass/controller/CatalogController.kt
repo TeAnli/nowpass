@@ -47,8 +47,8 @@ class CatalogController(
     fun answer(@PathVariable id: Long): R<QuestionAnswer> =
         R.ok(questionService.answer(id))
 
-    @Operation(summary = "分类列表", description = "含每个分类下的题目数量")
+    @Operation(summary = "分类列表", description = "只返回已有题目的分类，避免前台出现空分类")
     @GetMapping("/categories")
     fun categories(): R<List<QuestionCategory>> =
-        R.ok(questionCategoryService.list())
+        R.ok(questionCategoryService.list().filter { it.questionCount > 0 })
 }

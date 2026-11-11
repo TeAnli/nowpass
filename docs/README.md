@@ -14,3 +14,4 @@
 | [10-qq-oauth.md](10-qq-oauth.md) | QQ 互联 OAuth 登录、回调、配置与安全说明 |
 | [11-question-curation.md](11-question-curation.md) | 题库选题规范、原创题与外部题库导入边界 |
 | [12-monorepo.md](12-monorepo.md) | Monorepo 目录职责、Gradle 位置、依赖方向与常用命令 |
+| [13-question-bank.md](13-question-bank.md) | 90 道题目按分类整理的完整题库目录 |

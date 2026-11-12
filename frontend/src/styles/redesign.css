@@ -1217,7 +1217,9 @@ body {
 .voice-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 12px 20px 8px; border-top: 1px solid var(--color-border); }
 .voice-bar .ant-btn { font-size: 12px; }
 .voice-button.is-listening { box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary) 12%, transparent); }
+.interview-voice-toggle.is-speaking { box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary) 12%, transparent); }
 .voice-status { flex-basis: 100%; font-size: 11px; line-height: 1.6; color: var(--color-text-muted); overflow-wrap: anywhere; }
+.voice-status--speaking { color: var(--color-primary); }
 .voice-status--error { color: var(--color-danger); }
 .voice-wave { display: inline-block; width: 7px; height: 7px; background: var(--color-primary); border-radius: 50%; margin-right: 5px; animation: chat-dot 1s ease-in-out infinite; }
 .interview-finish-button { margin-left: auto; }

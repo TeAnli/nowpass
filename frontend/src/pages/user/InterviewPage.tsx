@@ -31,12 +31,22 @@ export function InterviewPage() {
   const [now, setNow] = useState(() => Date.now())
   const [camera, setCamera] = useState<'off' | 'requesting' | 'on'>('off')
   const [cameraError, setCameraError] = useState<string | null>(null)
+  const [autoSpeak, setAutoSpeak] = useState(() => {
+    try {
+      return localStorage.getItem('nowpass.interview.autoSpeak') !== '0'
+    } catch {
+      return true
+    }
+  })
+  const [speaking, setSpeaking] = useState(false)
   const chatRef = useRef<HTMLDivElement | null>(null)
   const inputRef = useRef<TextAreaRef>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const cameraRequestRef = useRef(0)
   const requestRef = useRef<AbortController | null>(null)
+  const spokenRef = useRef(0)
+  const ttsSupported = 'speechSynthesis' in window
 
   const questions = useQuery({
     queryKey: ['interview-questions'],
@@ -145,6 +155,8 @@ export function InterviewPage() {
     requestRef.current = null
     speech.stop()
     window.speechSynthesis?.cancel()
+    spokenRef.current = 0
+    setSpeaking(false)
     stopCamera()
     setSelectedId(id)
     setPhase('ready')
@@ -161,6 +173,8 @@ export function InterviewPage() {
     if (!selectedId || sending) return
     speech.stop()
     window.speechSynthesis?.cancel()
+    spokenRef.current = 0
+    setSpeaking(false)
     setPhase('active')
     setStartedAt(Date.now())
     setNow(Date.now())
@@ -174,6 +188,8 @@ export function InterviewPage() {
     const text = input.trim()
     if (!text || sending || phase !== 'active' || failedAction) return
     speech.stop()
+    window.speechSynthesis?.cancel()
+    setSpeaking(false)
     const next: InterviewMessage[] = [...messages, { role: 'user', content: text }]
     setMessages(next)
     setInput('')
@@ -182,12 +198,14 @@ export function InterviewPage() {
   const finishInterview = () => {
     speech.stop()
     window.speechSynthesis?.cancel()
+    setSpeaking(false)
     stopCamera()
     void requestReply(messages, 'review')
   }
   const finishWithoutReview = () => {
     speech.stop()
     window.speechSynthesis?.cancel()
+    setSpeaking(false)
     stopCamera()
     setPhase('finished')
     setNow(Date.now())
@@ -195,14 +213,49 @@ export function InterviewPage() {
     setFailedAction(null)
   }
   const speak = (text: string) => {
-    if (!('speechSynthesis' in window)) return
+    if (!ttsSupported) return
     speech.stop()
     window.speechSynthesis.cancel()
-    const utterance = new SpeechSynthesisUtterance(text.replace(/[#*`]/g, ''))
+    const plain = text
+      .replace(/\[(.*?)\]\(.*?\)/g, '$1')
+      .replace(/[#*`>_~-]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+    if (!plain) return
+    const utterance = new SpeechSynthesisUtterance(plain)
     utterance.lang = 'zh-CN'
     utterance.rate = 0.95
+    utterance.pitch = 1
+    const voices = window.speechSynthesis.getVoices()
+    const chineseVoice = voices.find((voice) => voice.lang.toLowerCase().startsWith('zh'))
+    if (chineseVoice) utterance.voice = chineseVoice
+    utterance.onstart = () => setSpeaking(true)
+    utterance.onend = () => setSpeaking(false)
+    utterance.onerror = () => setSpeaking(false)
     window.speechSynthesis.speak(utterance)
   }
+  const toggleAutoSpeak = () => {
+    const next = !autoSpeak
+    setAutoSpeak(next)
+    try {
+      localStorage.setItem('nowpass.interview.autoSpeak', next ? '1' : '0')
+    } catch {
+      // ignore storage errors
+    }
+    if (!next) {
+      window.speechSynthesis?.cancel()
+      setSpeaking(false)
+    }
+  }
+  useEffect(() => {
+    if (!autoSpeak || !ttsSupported || phase !== 'active') return
+    const last = messages[messages.length - 1]
+    if (!last || last.role !== 'assistant' || spokenRef.current >= messages.length) return
+    spokenRef.current = messages.length
+    speak(last.content)
+    // speak 只依赖当前消息内容，避免把 messages 变化之外的状态带入
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages, autoSpeak, phase, ttsSupported])
   const exportInterview = () => {
     const text = `# ${question?.title ?? 'NowPass 面试记录'}\n\n` + messages.map((item) => `## ${item.role === 'user' ? '我的回答' : '面试官'}\n\n${item.content}`).join('\n\n')
     const url = URL.createObjectURL(new Blob([text], { type: 'text/markdown;charset=utf-8' }))
@@ -289,8 +342,21 @@ export function InterviewPage() {
               <div className="voice-bar"><Tooltip title={speech.supported ? '语音识别为文字，发送前可修改' : '当前浏览器不支持语音识别，请使用文字'}><Button className={speech.listening ? 'voice-button is-listening' : 'voice-button'}
                 type={speech.listening ? 'primary' : 'default'} icon={<AppIcon icon={speech.listening ? 'lucide:mic-off' : 'lucide:mic'} size={16} />} onClick={() => { window.speechSynthesis?.cancel(); speech.toggle() }} disabled={!speech.supported || !canInteract} aria-pressed={speech.listening}>{speech.listening ? '停止聆听' : '语音输入'}</Button></Tooltip>
                 <Button type="text" icon={<AppIcon icon="lucide:lightbulb" size={15} />} disabled={!canInteract} onClick={() => { speech.stop(); void requestReply(messages, 'hint') }}>给我提示</Button>
+                <Tooltip title={ttsSupported ? '自动朗读面试官的新回复' : '当前浏览器不支持语音播报'}>
+                  <Button
+                    type={autoSpeak ? 'primary' : 'default'}
+                    className={speaking ? 'interview-voice-toggle is-speaking' : 'interview-voice-toggle'}
+                    icon={<AppIcon icon={autoSpeak ? 'lucide:volume-2' : 'lucide:volume-x'} size={15} />}
+                    onClick={toggleAutoSpeak}
+                    disabled={!ttsSupported}
+                    aria-pressed={autoSpeak}
+                  >
+                    {speaking ? '正在播报' : autoSpeak ? '语音播报' : '语音已关'}
+                  </Button>
+                </Tooltip>
                 <Button type="text" className="interview-finish-button" disabled={!canInteract} onClick={finishInterview}>结束并点评 <AppIcon icon="lucide:arrow-up-right" size={14} /></Button>
                 {speech.listening && <span className="voice-status"><span className="voice-wave" aria-hidden="true" />正在听… {speech.interim}</span>}
+                {speaking && <span className="voice-status voice-status--speaking"><span className="voice-wave" aria-hidden="true" />正在播报面试官…</span>}
                 {speech.error && <span className="voice-status voice-status--error" role="alert">{speech.error}</span>}
               </div>
               <div className="interview-composer"><Input.TextArea ref={inputRef} value={input} maxLength={4000} showCount onChange={(event) => setInput(event.target.value)} onPressEnter={(event) => {

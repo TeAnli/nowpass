@@ -1,4 +1,3 @@
-import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import type { QuestionCategory } from '@nowpass/api-contracts'
@@ -13,11 +12,13 @@ interface CategoryGroup {
   items: QuestionCategory[]
 }
 
+const EMPTY_CATEGORIES: QuestionCategory[] = []
+
 export function TopicsPage() {
   const categories = useQuery({ queryKey: ['categories'], queryFn: catalogApi.listCategories })
-  const allCategories = categories.data ?? []
+  const allCategories = categories.data ?? EMPTY_CATEGORIES
   const totalQuestions = allCategories.reduce((sum, category) => sum + category.questionCount, 0)
-  const groups = useMemo(() => {
+  const groups = (() => {
     const grouped = new Map<string, CategoryGroup>()
     allCategories.forEach((category) => {
       const name = category.majorCategoryName ?? '未分组'
@@ -27,7 +28,7 @@ export function TopicsPage() {
       grouped.set(name, group)
     })
     return [...grouped.values()].sort((left, right) => left.sort - right.sort)
-  }, [allCategories])
+  })()
 
   return (
     <div className="page-container topics-page">

@@ -37,7 +37,9 @@ export function useSpeechRecognition(onFinalText: (text: string) => void) {
   const [interim, setInterim] = useState('')
   const [error, setError] = useState<string | null>(null)
 
-  callbackRef.current = onFinalText
+  useEffect(() => {
+    callbackRef.current = onFinalText
+  }, [onFinalText])
 
   useEffect(() => {
     const Constructor = getRecognitionConstructor()

@@ -10,6 +10,17 @@
 - 前端真实接口联调（需先启动 `pnpm docker:up`）
 - 生产部署时将 `frontend/dist` 打包进后端静态资源
 
+## [0.25.1] - 2026-11-13
+
+### 变更
+- 面试官默认音色改为「知小夏」（`zhixiaoxia`）
+- 文档补充音色选择说明：控制台默认发音人不生效，由 `ALIYUN_TTS_VOICE` 决定；大模型音色标准接口不支持
+
+### 验证
+- 实测 AppKey 可用音色：`xiaoyun`、`aixia`、`aijia`、`sitong`、`zhixiaoxia`、`zhixiaobai` 均返回 200
+- `longxiaochun` 等 CosyVoice 音色返回 `41020001`，标准接口不支持
+- 切到 `zhixiaoxia` 后合成返回 200，`/tts/status` 的 `voice` 字段同步更新
+
 ## [0.25.0] - 2026-11-13
 
 ### 新增

@@ -10,6 +10,7 @@ import { AppIcon } from '@/components/AppIcon'
 import { DifficultyBadge } from '@/components/DifficultyBadge'
 import { MarkdownView } from '@/components/MarkdownView'
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition'
+import { useInterviewVoice } from '@/hooks/useInterviewVoice'
 import { ApiError } from '@/lib/api'
 
 function formatElapsed(seconds: number): string {
@@ -38,7 +39,8 @@ export function InterviewPage() {
       return true
     }
   })
-  const [speaking, setSpeaking] = useState(false)
+  const voice = useInterviewVoice()
+  const speakVoice = voice.speak
   const chatRef = useRef<HTMLDivElement | null>(null)
   const inputRef = useRef<TextAreaRef>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -46,7 +48,7 @@ export function InterviewPage() {
   const cameraRequestRef = useRef(0)
   const requestRef = useRef<AbortController | null>(null)
   const spokenRef = useRef(0)
-  const ttsSupported = 'speechSynthesis' in window
+  const ttsSupported = Boolean(voice.status?.enabled) || 'speechSynthesis' in window
 
   const questions = useQuery({
     queryKey: ['interview-questions'],
@@ -154,9 +156,8 @@ export function InterviewPage() {
     requestRef.current?.abort()
     requestRef.current = null
     speech.stop()
-    window.speechSynthesis?.cancel()
+    voice.stop()
     spokenRef.current = 0
-    setSpeaking(false)
     stopCamera()
     setSelectedId(id)
     setPhase('ready')
@@ -172,9 +173,9 @@ export function InterviewPage() {
   const startInterview = () => {
     if (!selectedId || sending) return
     speech.stop()
-    window.speechSynthesis?.cancel()
+    voice.stop()
+    voice.prime()
     spokenRef.current = 0
-    setSpeaking(false)
     setPhase('active')
     setStartedAt(Date.now())
     setNow(Date.now())
@@ -188,8 +189,7 @@ export function InterviewPage() {
     const text = input.trim()
     if (!text || sending || phase !== 'active' || failedAction) return
     speech.stop()
-    window.speechSynthesis?.cancel()
-    setSpeaking(false)
+    voice.stop()
     const next: InterviewMessage[] = [...messages, { role: 'user', content: text }]
     setMessages(next)
     setInput('')
@@ -197,42 +197,18 @@ export function InterviewPage() {
   }
   const finishInterview = () => {
     speech.stop()
-    window.speechSynthesis?.cancel()
-    setSpeaking(false)
+    voice.stop()
     stopCamera()
     void requestReply(messages, 'review')
   }
   const finishWithoutReview = () => {
     speech.stop()
-    window.speechSynthesis?.cancel()
-    setSpeaking(false)
+    voice.stop()
     stopCamera()
     setPhase('finished')
     setNow(Date.now())
     setError(null)
     setFailedAction(null)
-  }
-  const speak = (text: string) => {
-    if (!ttsSupported) return
-    speech.stop()
-    window.speechSynthesis.cancel()
-    const plain = text
-      .replace(/\[(.*?)\]\(.*?\)/g, '$1')
-      .replace(/[#*`>_~-]/g, '')
-      .replace(/\s+/g, ' ')
-      .trim()
-    if (!plain) return
-    const utterance = new SpeechSynthesisUtterance(plain)
-    utterance.lang = 'zh-CN'
-    utterance.rate = 0.95
-    utterance.pitch = 1
-    const voices = window.speechSynthesis.getVoices()
-    const chineseVoice = voices.find((voice) => voice.lang.toLowerCase().startsWith('zh'))
-    if (chineseVoice) utterance.voice = chineseVoice
-    utterance.onstart = () => setSpeaking(true)
-    utterance.onend = () => setSpeaking(false)
-    utterance.onerror = () => setSpeaking(false)
-    window.speechSynthesis.speak(utterance)
   }
   const toggleAutoSpeak = () => {
     const next = !autoSpeak
@@ -242,20 +218,15 @@ export function InterviewPage() {
     } catch {
       // ignore storage errors
     }
-    if (!next) {
-      window.speechSynthesis?.cancel()
-      setSpeaking(false)
-    }
+    if (!next) voice.stop()
   }
   useEffect(() => {
     if (!autoSpeak || !ttsSupported || phase !== 'active') return
     const last = messages[messages.length - 1]
     if (!last || last.role !== 'assistant' || spokenRef.current >= messages.length) return
     spokenRef.current = messages.length
-    speak(last.content)
-    // speak 只依赖当前消息内容，避免把 messages 变化之外的状态带入
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [messages, autoSpeak, phase, ttsSupported])
+    void speakVoice(last.content)
+  }, [messages, autoSpeak, phase, ttsSupported, speakVoice])
   const exportInterview = () => {
     const text = `# ${question?.title ?? 'NowPass 面试记录'}\n\n` + messages.map((item) => `## ${item.role === 'user' ? '我的回答' : '面试官'}\n\n${item.content}`).join('\n\n')
     const url = URL.createObjectURL(new Blob([text], { type: 'text/markdown;charset=utf-8' }))
@@ -332,7 +303,7 @@ export function InterviewPage() {
               {message.role === 'assistant' && <span className="chat-avatar" aria-hidden="true"><AppIcon icon="lucide:bot" size={16} /></span>}
               <div className="chat-bubble"><span className="chat-message-label">{message.role === 'user' ? '我的回答' : index === reportIndex ? '面试回顾' : '面试官'}</span>
                 {message.role === 'assistant' ? <MarkdownView>{message.content}</MarkdownView> : <p>{message.content}</p>}
-                {message.role === 'assistant' && <button type="button" className="chat-speak" onClick={() => speak(message.content)} aria-label="朗读这条回复"><AppIcon icon="lucide:volume-2" size={14} /> 朗读</button>}</div>
+                {message.role === 'assistant' && <button type="button" className="chat-speak" onClick={() => void voice.speak(message.content)} aria-label="朗读这条回复"><AppIcon icon="lucide:volume-2" size={14} /> 朗读</button>}</div>
             </div>)}
             {sending && <div className="chat-message chat-message--ai" aria-label="面试官正在思考"><span className="chat-avatar"><AppIcon icon="lucide:bot" size={16} /></span><div className="chat-bubble chat-bubble--typing"><span /><span /><span /></div></div>}
           </div>
@@ -340,23 +311,24 @@ export function InterviewPage() {
           {phase === 'finished' ? <div className="interview-finished"><div><AppIcon icon="lucide:circle-check" size={18} /><span>每一次表达，都比上一次更进一步。</span></div><Button onClick={exportInterview} icon={<AppIcon icon="lucide:download" size={15} />}>导出面试记录</Button></div>
             : <>
               <div className="voice-bar"><Tooltip title={speech.supported ? '语音识别为文字，发送前可修改' : '当前浏览器不支持语音识别，请使用文字'}><Button className={speech.listening ? 'voice-button is-listening' : 'voice-button'}
-                type={speech.listening ? 'primary' : 'default'} icon={<AppIcon icon={speech.listening ? 'lucide:mic-off' : 'lucide:mic'} size={16} />} onClick={() => { window.speechSynthesis?.cancel(); speech.toggle() }} disabled={!speech.supported || !canInteract} aria-pressed={speech.listening}>{speech.listening ? '停止聆听' : '语音输入'}</Button></Tooltip>
+                type={speech.listening ? 'primary' : 'default'} icon={<AppIcon icon={speech.listening ? 'lucide:mic-off' : 'lucide:mic'} size={16} />} onClick={() => { voice.stop(); speech.toggle() }} disabled={!speech.supported || !canInteract} aria-pressed={speech.listening}>{speech.listening ? '停止聆听' : '语音输入'}</Button></Tooltip>
                 <Button type="text" icon={<AppIcon icon="lucide:lightbulb" size={15} />} disabled={!canInteract} onClick={() => { speech.stop(); void requestReply(messages, 'hint') }}>给我提示</Button>
-                <Tooltip title={ttsSupported ? '自动朗读面试官的新回复' : '当前浏览器不支持语音播报'}>
+                <Tooltip title={ttsSupported ? (voice.status?.enabled ? '自动播放阿里云 AI 人声，失败时回退浏览器语音' : '自动使用浏览器语音朗读') : '当前浏览器不支持语音播报'}>
                   <Button
                     type={autoSpeak ? 'primary' : 'default'}
-                    className={speaking ? 'interview-voice-toggle is-speaking' : 'interview-voice-toggle'}
+                    className={voice.speaking || voice.loading ? 'interview-voice-toggle is-speaking' : 'interview-voice-toggle'}
                     icon={<AppIcon icon={autoSpeak ? 'lucide:volume-2' : 'lucide:volume-x'} size={15} />}
                     onClick={toggleAutoSpeak}
                     disabled={!ttsSupported}
                     aria-pressed={autoSpeak}
                   >
-                    {speaking ? '正在播报' : autoSpeak ? '语音播报' : '语音已关'}
+                    {voice.loading ? '正在生成' : voice.speaking ? '正在播报' : autoSpeak ? (voice.status?.enabled ? 'AI 人声' : '浏览器语音') : '语音已关'}
                   </Button>
                 </Tooltip>
                 <Button type="text" className="interview-finish-button" disabled={!canInteract} onClick={finishInterview}>结束并点评 <AppIcon icon="lucide:arrow-up-right" size={14} /></Button>
                 {speech.listening && <span className="voice-status"><span className="voice-wave" aria-hidden="true" />正在听… {speech.interim}</span>}
-                {speaking && <span className="voice-status voice-status--speaking"><span className="voice-wave" aria-hidden="true" />正在播报面试官…</span>}
+                {voice.loading && <span className="voice-status voice-status--speaking"><span className="voice-wave" aria-hidden="true" />正在生成 AI 人声…</span>}
+                {voice.speaking && <span className="voice-status voice-status--speaking"><span className="voice-wave" aria-hidden="true" />正在播报面试官…</span>}
                 {speech.error && <span className="voice-status voice-status--error" role="alert">{speech.error}</span>}
               </div>
               <div className="interview-composer"><Input.TextArea ref={inputRef} value={input} maxLength={4000} showCount onChange={(event) => setInput(event.target.value)} onPressEnter={(event) => {

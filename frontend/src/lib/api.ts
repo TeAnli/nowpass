@@ -24,8 +24,8 @@ interface RequestOptions {
   signal?: AbortSignal
 }
 
-export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const headers = new Headers({ Accept: 'application/json' })
+function authHeaders(options: RequestOptions, accept: string): Headers {
+  const headers = new Headers({ Accept: accept })
   if (options.body !== undefined) {
     headers.set('Content-Type', 'application/json; charset=utf-8')
   }
@@ -33,12 +33,22 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     const token = authStorage.getToken()
     if (token) headers.set('Authorization', `Bearer ${token}`)
   }
+  return headers
+}
 
+function updateTokenExpiry(response: Response): void {
+  const expireHeader = response.headers.get('X-Token-Expire-At')
+  if (!expireHeader) return
+  const expireAt = Number(expireHeader)
+  if (Number.isFinite(expireAt)) authStorage.setExpireAt(expireAt)
+}
+
+export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
   let response: Response
   try {
     response = await fetch(`${BASE_URL}${path}`, {
       method: options.method ?? 'GET',
-      headers,
+      headers: authHeaders(options, 'application/json'),
       body: options.body === undefined ? undefined : JSON.stringify(options.body),
       signal: options.signal,
       credentials: 'omit',
@@ -48,12 +58,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     throw new ApiError('无法连接服务器，请确认后端已启动后重试。', 0, 0)
   }
 
-  const expireHeader = response.headers.get('X-Token-Expire-At')
-  if (expireHeader) {
-    const expireAt = Number(expireHeader)
-    if (Number.isFinite(expireAt)) authStorage.setExpireAt(expireAt)
-  }
-
+  updateTokenExpiry(response)
   const payload = (await response.json().catch(() => null)) as ApiEnvelope<T> | null
 
   if (response.status === 401 && options.auth !== false) {
@@ -79,6 +84,42 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   }
 
   return payload.data as T
+}
+
+export async function apiRequestBlob(path: string, options: RequestOptions = {}): Promise<Blob> {
+  let response: Response
+  try {
+    response = await fetch(`${BASE_URL}${path}`, {
+      method: options.method ?? 'GET',
+      headers: authHeaders(options, 'audio/mpeg, application/json'),
+      body: options.body === undefined ? undefined : JSON.stringify(options.body),
+      signal: options.signal,
+      credentials: 'omit',
+    })
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') throw error
+    throw new ApiError('无法连接服务器，请确认后端已启动后重试。', 0, 0)
+  }
+
+  updateTokenExpiry(response)
+  if (response.status === 401 && options.auth !== false) {
+    authStorage.clear()
+    window.dispatchEvent(new Event(AUTH_EXPIRED_EVENT))
+    throw new ApiError('登录状态已过期，请重新登录。', 401, 401)
+  }
+
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as ApiEnvelope<unknown> | null
+    throw new ApiError(payload?.msg ?? `语音请求失败（HTTP ${response.status}）`, payload?.code ?? response.status, response.status)
+  }
+
+  const contentType = response.headers.get('Content-Type') ?? ''
+  if (contentType.includes('application/json')) {
+    const payload = (await response.json().catch(() => null)) as ApiEnvelope<unknown> | null
+    throw new ApiError(payload?.msg ?? '语音请求失败，请稍后重试。', payload?.code ?? 500, response.status)
+  }
+
+  return response.blob()
 }
 
 export function toQueryString(params: Record<string, unknown>): string {

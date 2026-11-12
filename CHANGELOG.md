@@ -10,6 +10,30 @@
 - 前端真实接口联调（需先启动 `pnpm docker:up`）
 - 生产部署时将 `frontend/dist` 打包进后端静态资源
 
+## [0.25.0] - 2026-11-13
+
+### 新增
+- 接入阿里云智能语音交互，AI 面试官可使用真实 AI 人声播报
+- 后端自动用 AccessKey 换取临时 Token 并缓存到 Redis，Token 与密钥不下发前端
+- 新增 `GET /api/interview/tts/status` 与 `POST /api/interview/tts`，后者返回 `audio/mpeg`
+- 长回复按中文标点切段顺序播放，单段不超过 300 字
+- 前端「语音播报」按钮显示当前模式：AI 人声 / 浏览器语音 / 正在生成 / 正在播报
+- 点「开始面试」时预热音频，规避浏览器自动播放限制
+- TTS 未配置或合成失败时自动回退浏览器语音
+
+### 变更
+- `NowPassProperties` 增加 `nowpass.tts` 配置段
+- `application.yml`、`.env.example`、`infra/docker-compose.yml` 增加阿里云 TTS 环境变量
+- 前端 `lib/api.ts` 增加二进制请求，并识别 JSON 错误响应
+- 文档 `08-ai-interview.md` 补充 TTS 申请步骤、接口与行为约定
+
+### 验证
+- 后端 `clean build`、前端 typecheck/lint/build 通过
+- 未配置时 `/api/interview/tts/status` 返回 `enabled=false`，页面显示「浏览器语音」
+- 假凭证下 TTS 返回 400「语音服务暂时不可用」，日志无密钥或 Token 泄露
+- 超过 300 字返回 400，未登录返回 401
+- 前后端容器 healthy
+
 ## [0.24.0] - 2026-11-12
 
 ### 新增

@@ -29,6 +29,9 @@ object CacheKeys {
     /** QQ 一次性登录票据：oauth:qq:ticket:{ticket} -> tokenId */
     const val OAUTH_QQ_TICKET_PREFIX = "oauth:qq:ticket:"
 
+    /** 阿里云 TTS 临时 Token：tts:aliyun:token:{region} */
+    const val TTS_ALIYUN_TOKEN_PREFIX = "tts:aliyun:token:"
+
     fun loginToken(tokenId: String): String = LOGIN_TOKEN_PREFIX + tokenId
 
     fun captcha(uuid: String): String = CAPTCHA_PREFIX + uuid
@@ -44,4 +47,6 @@ object CacheKeys {
     fun oauthQqState(state: String): String = OAUTH_QQ_STATE_PREFIX + state
 
     fun oauthQqTicket(ticket: String): String = OAUTH_QQ_TICKET_PREFIX + ticket
+
+    fun ttsAliyunToken(region: String): String = TTS_ALIYUN_TOKEN_PREFIX + region
 }

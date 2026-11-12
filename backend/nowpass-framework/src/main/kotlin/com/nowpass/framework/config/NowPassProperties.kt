@@ -19,6 +19,7 @@ class NowPassProperties {
     var login: Login = Login()
     var init: Init = Init()
     var interview: Interview = Interview()
+    var tts: Tts = Tts()
 
     class Token {
         /** token 有效期（分钟） */
@@ -66,5 +67,31 @@ class NowPassProperties {
         var model: String = "gpt-4o-mini"
         var temperature: Double = 0.6
         var maxHistory: Int = 20
+    }
+
+    /**
+     * 阿里云智能语音交互（NLS）语音合成配置。
+     *
+     * AccessKey 只用于后端换取临时 Token，绝不下发前端。
+     */
+    class Tts {
+        var enabled: Boolean = false
+        var accessKeyId: String = ""
+        var accessKeySecret: String = ""
+        var appKey: String = ""
+        var region: String = "cn-shanghai"
+        var voice: String = "xiaoyun"
+        var format: String = "mp3"
+        var sampleRate: Int = 16000
+        var speechRate: Int = 0
+        var pitchRate: Int = 0
+        var volume: Int = 50
+        var maxChars: Int = 300
+
+        val configured: Boolean
+            get() = enabled &&
+                accessKeyId.isNotBlank() &&
+                accessKeySecret.isNotBlank() &&
+                appKey.isNotBlank()
     }
 }

@@ -9,7 +9,7 @@
 - 语音识别要求安全上下文：`localhost` / `127.0.0.1` 或 HTTPS。普通 HTTP 域名下浏览器会拒绝麦克风。
 - 不支持语音识别的浏览器仍可正常使用文字输入。
 - AI 回复默认自动语音播报，可在底部开关关闭；也可点击单条回复的「朗读」手动重听
-- 语音播报使用浏览器 `speechSynthesis` 本地 TTS，优先选择中文语音，不经过 NowPass 后端
+- 配置阿里云 TTS 后使用 AI 人声，否则使用浏览器 `speechSynthesis` 本地朗读
 
 ## 2. 后端接口
 
@@ -84,6 +84,52 @@ INTERVIEW_MODEL=qwen-plus
 - 用户输入可能包含提示注入，生产环境建议加输入过滤、调用频率限制和用量上限。
 - 语音识别依赖浏览器厂商服务，离线或受限网络下可能不可用。
 - 当前没有会话持久化、数字评分和并发用量统计；结束点评按最近 20 条消息生成。
+
+## 5.1 AI 人声（阿里云语音合成）
+
+面试官回复默认自动播报。TTS 有两种模式：
+
+| 模式 | 触发条件 | 说明 |
+|---|---|---|
+| AI 人声 | 配置了阿里云 TTS | 后端调用阿里云语音合成，返回 MP3 |
+| 浏览器语音 | 未配置或合成失败 | 回退浏览器 `speechSynthesis` |
+
+### 环境变量
+
+| 变量 | 默认值 | 说明 |
+|---|---|---|
+| `TTS_ENABLED` | `false` | 必须为 `true` 才启用 AI 人声 |
+| `ALIYUN_TTS_ACCESS_KEY_ID` | 空 | RAM AccessKey ID |
+| `ALIYUN_TTS_ACCESS_KEY_SECRET` | 空 | RAM AccessKey Secret |
+| `ALIYUN_TTS_APP_KEY` | 空 | 智能语音交互项目 AppKey |
+| `ALIYUN_TTS_VOICE` | `xiaoyun` | 发音人 |
+| `ALIYUN_TTS_REGION` | `cn-shanghai` | 服务地域 |
+
+申请步骤：
+
+1. 登录阿里云，开通智能语音交互服务
+2. 在控制台创建项目，获取 `AppKey`
+3. 创建 RAM 用户并授予 `AliyunNLSFullAccess`，生成 AccessKey
+4. 把三项凭证写入 `.env`，并设置 `TTS_ENABLED=true`
+
+后端会自动用 AccessKey 换取临时 Token 并缓存到 Redis，不需要手工复制 Token。
+
+### 接口
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| GET | `/api/interview/tts/status` | 返回 `enabled`、`provider`、`voice`、`maxChars`，不含密钥 |
+| POST | `/api/interview/tts` | 返回 `audio/mpeg`；单次最多 300 字；限流 20 次/分钟 |
+
+### 行为约定
+
+- AccessKey、AppKey、Token 只在服务端使用，不下发前端、不写日志
+- 长回复按中文标点切段，逐段合成后顺序播放，避免单次超 300 字被截断
+- 新回复到来时取消上一段播放，不叠音
+- 浏览器要求首次音频播放由用户手势触发，点「开始面试」时会预热音频
+- 自动播放失败时回退浏览器语音，不算功能错误
+- 关闭「语音播报」开关会立即停止当前播报
+- 合成按字符计费，建议生产环境加缓存与更严格的限流
 
 
 ## 6. 面试房间交互与摄像头

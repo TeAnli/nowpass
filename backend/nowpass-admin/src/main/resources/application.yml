@@ -69,6 +69,19 @@ nowpass:
     model: ${INTERVIEW_MODEL:gpt-4o-mini}
     temperature: 0.6
     max-history: 20
+  tts:
+    enabled: ${TTS_ENABLED:false}
+    access-key-id: ${ALIYUN_TTS_ACCESS_KEY_ID:}
+    access-key-secret: ${ALIYUN_TTS_ACCESS_KEY_SECRET:}
+    app-key: ${ALIYUN_TTS_APP_KEY:}
+    region: ${ALIYUN_TTS_REGION:cn-shanghai}
+    voice: ${ALIYUN_TTS_VOICE:xiaoyun}
+    format: mp3
+    sample-rate: 16000
+    speech-rate: 0
+    pitch-rate: 0
+    volume: 50
+    max-chars: 300
   minio:
     endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
     public-endpoint: ${MINIO_PUBLIC_ENDPOINT:http://127.0.0.1:9002}

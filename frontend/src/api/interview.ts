@@ -1,4 +1,4 @@
-import { apiRequest } from '@/lib/api'
+import { apiRequest, apiRequestBlob } from '@/lib/api'
 
 export interface InterviewMessage {
   role: 'user' | 'assistant'
@@ -19,6 +19,13 @@ export interface InterviewStatus {
   provider: string
 }
 
+export interface InterviewTtsStatus {
+  enabled: boolean
+  provider: string
+  voice: string
+  maxChars: number
+}
+
 export const interviewApi = {
   status: () => apiRequest<InterviewStatus>('/api/interview/status'),
   chat: (questionId: number, history: InterviewMessage[], action: InterviewAction = 'chat', signal?: AbortSignal) =>
@@ -27,4 +34,12 @@ export const interviewApi = {
       body: { questionId, history: history.slice(-20), action },
       signal,
     }),
+  ttsStatus: () => apiRequest<InterviewTtsStatus>('/api/interview/tts/status'),
+  tts: (text: string, signal?: AbortSignal) =>
+    apiRequestBlob('/api/interview/tts', {
+      method: 'POST',
+      body: { text },
+      signal,
+    }),
 }
+

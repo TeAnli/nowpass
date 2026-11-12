@@ -80,7 +80,7 @@ class NowPassProperties {
         var accessKeySecret: String = ""
         var appKey: String = ""
         var region: String = "cn-shanghai"
-        var voice: String = "xiaoyun"
+        var voice: String = "zhixiaoxia"
         var format: String = "mp3"
         var sampleRate: Int = 16000
         var speechRate: Int = 0

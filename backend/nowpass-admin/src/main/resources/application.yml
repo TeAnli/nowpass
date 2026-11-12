@@ -75,7 +75,7 @@ nowpass:
     access-key-secret: ${ALIYUN_TTS_ACCESS_KEY_SECRET:}
     app-key: ${ALIYUN_TTS_APP_KEY:}
     region: ${ALIYUN_TTS_REGION:cn-shanghai}
-    voice: ${ALIYUN_TTS_VOICE:xiaoyun}
+    voice: ${ALIYUN_TTS_VOICE:zhixiaoxia}
     format: mp3
     sample-rate: 16000
     speech-rate: 0

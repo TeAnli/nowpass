@@ -102,7 +102,7 @@ INTERVIEW_MODEL=qwen-plus
 | `ALIYUN_TTS_ACCESS_KEY_ID` | 空 | RAM AccessKey ID |
 | `ALIYUN_TTS_ACCESS_KEY_SECRET` | 空 | RAM AccessKey Secret |
 | `ALIYUN_TTS_APP_KEY` | 空 | 智能语音交互项目 AppKey |
-| `ALIYUN_TTS_VOICE` | `xiaoyun` | 发音人 |
+| `ALIYUN_TTS_VOICE` | `zhixiaoxia` | 发音人，默认知小夏 |
 | `ALIYUN_TTS_REGION` | `cn-shanghai` | 服务地域 |
 
 申请步骤：
@@ -139,11 +139,11 @@ INTERVIEW_MODEL=qwen-plus
 
 | 音色名 | voice 参数 | 说明 |
 |---|---|---|
-| 晓云 | `xiaoyun` | 女声，通用场景，默认 |
+| 知小夏 | `zhixiaoxia` | 女声，`zhi*` 系列，项目默认 |
+| 晓云 | `xiaoyun` | 女声，通用场景 |
 | 艾夏 | `aixia` | 女声，偏自然口语 |
 | 艾佳 | `aijia` | 女声，偏播报感 |
 | 思彤 | `sitong` | 女声，沉稳 |
-| 知小夏 | `zhixiaoxia` | 女声，`zhi*` 系列 |
 | 知小白 | `zhixiaobai` | 女声，`zhi*` 系列 |
 
 注意：

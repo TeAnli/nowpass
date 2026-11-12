@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.client.JdkClientHttpRequestFactory
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClient
+import org.springframework.web.client.RestClientResponseException
 import org.springframework.web.util.UriComponentsBuilder
 import java.net.http.HttpClient
 import java.time.Duration
@@ -63,8 +64,15 @@ class AliyunTtsService(
 
         val response = try {
             restClient.get().uri(uri).retrieve().toEntity(ByteArray::class.java)
+        } catch (exception: RestClientResponseException) {
+            log.warn(
+                "阿里云 TTS 合成失败：status={}, body={}",
+                exception.statusCode.value(),
+                exception.responseBodyAsString.take(500),
+            )
+            throw ServiceException(ErrorCode.BAD_REQUEST, "语音合成失败，请稍后重试")
         } catch (exception: Exception) {
-            log.warn("阿里云 TTS 合成请求失败：{}", exception.javaClass.simpleName)
+            log.warn("阿里云 TTS 合成请求异常：{}", exception.javaClass.simpleName)
             throw ServiceException(ErrorCode.BAD_REQUEST, "语音合成失败，请稍后重试")
         }
         val body = response.body

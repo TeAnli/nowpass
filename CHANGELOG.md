@@ -27,11 +27,18 @@
 - 前端 `lib/api.ts` 增加二进制请求，并识别 JSON 错误响应
 - 文档 `08-ai-interview.md` 补充 TTS 申请步骤、接口与行为约定
 
+### 修复
+- `RestClient.uri(String)` 会二次编码已编码的查询串，导致阿里云返回 `InvalidTimeStamp.Format`；改用 `URI.create` 传入完整地址
+- TTS Token 与合成失败时记录状态码和响应体，便于排查凭证、权限和配额问题
+
 ### 验证
 - 后端 `clean build`、前端 typecheck/lint/build 通过
 - 未配置时 `/api/interview/tts/status` 返回 `enabled=false`，页面显示「浏览器语音」
 - 假凭证下 TTS 返回 400「语音服务暂时不可用」，日志无密钥或 Token 泄露
 - 超过 300 字返回 400，未登录返回 401
+- 真实阿里云凭证下合成返回 200 与 `audio/mpeg`，文件头为标准 MP3
+- Token 成功写入 Redis 并按 `ExpireTime` 设置 TTL
+- 前端按钮在配置生效后显示「AI 人声」
 - 前后端容器 healthy
 
 ## [0.24.0] - 2026-11-12

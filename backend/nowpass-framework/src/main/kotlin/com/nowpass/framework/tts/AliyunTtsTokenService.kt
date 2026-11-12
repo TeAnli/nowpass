@@ -10,6 +10,8 @@ import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.http.client.JdkClientHttpRequestFactory
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestClient
+import org.springframework.web.client.RestClientResponseException
+import java.net.URI
 import java.net.URLEncoder
 import java.net.http.HttpClient
 import java.nio.charset.StandardCharsets
@@ -80,9 +82,18 @@ class AliyunTtsTokenService(
         val url = "$endpoint?$canonicalQuery&Signature=${encode(signature)}"
 
         val response = try {
-            restClient.get().uri(url).retrieve().body(JsonNode::class.java)
+            // 必须用 URI.create 传入已编码的地址：RestClient.uri(String) 会把它当模板再编码一次，
+            // 导致 %3A 变成 %253A，阿里云会返回 InvalidTimeStamp.Format。
+            restClient.get().uri(URI.create(url)).retrieve().body(JsonNode::class.java)
+        } catch (exception: RestClientResponseException) {
+            log.warn(
+                "阿里云 TTS Token 获取失败：status={}, body={}",
+                exception.statusCode.value(),
+                exception.responseBodyAsString.take(500),
+            )
+            throw ServiceException(ErrorCode.BAD_REQUEST, "语音服务暂时不可用")
         } catch (exception: Exception) {
-            log.warn("阿里云 TTS Token 获取失败：{}", exception.javaClass.simpleName)
+            log.warn("阿里云 TTS Token 请求异常：{}", exception.javaClass.simpleName)
             throw ServiceException(ErrorCode.BAD_REQUEST, "语音服务暂时不可用")
         }
         val token = response?.path("Token")?.path("Id")?.asText("").orEmpty()

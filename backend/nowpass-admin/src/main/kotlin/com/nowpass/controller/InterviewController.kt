@@ -7,6 +7,7 @@ import com.nowpass.framework.interview.AiInterviewService
 import com.nowpass.framework.interview.InterviewChatRequest
 import com.nowpass.framework.interview.InterviewChatResponse
 import com.nowpass.framework.interview.InterviewStatusResponse
+import com.nowpass.framework.security.SecurityUtils
 import com.nowpass.framework.tts.AliyunTtsService
 import com.nowpass.framework.tts.InterviewTtsRequest
 import com.nowpass.framework.tts.InterviewTtsStatusResponse
@@ -39,7 +40,14 @@ class InterviewController(
     @Operation(summary = "发送面试对话", description = "携带题目 id 与最近对话历史，返回面试官回复")
     @PostMapping("/chat")
     fun chat(@Valid @RequestBody request: InterviewChatRequest): R<InterviewChatResponse> =
-        R.ok(aiInterviewService.chat(request.questionId!!, request.history, request.action))
+        R.ok(
+            aiInterviewService.chat(
+                request.questionId!!,
+                request.history,
+                request.action,
+                SecurityUtils.currentUserId(),
+            ),
+        )
 
     @GetMapping("/tts/status")
     @Operation(summary = "获取面试官语音合成状态（不包含密钥）")

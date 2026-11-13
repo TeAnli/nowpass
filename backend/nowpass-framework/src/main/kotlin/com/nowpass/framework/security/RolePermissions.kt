@@ -52,6 +52,8 @@ object RolePermissions {
         Permissions.USER_RESET_PWD,
         Permissions.ONLINE_LIST,
         Permissions.OPERLOG_LIST,
+        Permissions.AI_VIEW,
+        Permissions.AI_EDIT,
     )
 
     /** 超级管理员：管理员权限 + 危险操作（删用户、强退在线会话） */

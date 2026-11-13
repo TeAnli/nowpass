@@ -237,7 +237,28 @@ AI 面试历史：
 
 所有接口只允许访问当前登录用户自己的数据，越权返回 404。
 
-## 9. 视频讲解
+## 9. AI 客服与 AI 管理
+
+AI 客服（登录后可用，限流 10 次/分钟）：
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| POST | `/api/support/chat` | body `{message, history}`，返回 `{reply, provider}` |
+
+未配置模型时返回固定引导文案，`provider` 为 `local` 或 `local-fallback`。
+
+AI 管理（需权限点 `ai:view` / `ai:edit`）：
+
+| 方法 | 路径 | 权限 | 说明 |
+|---|---|---|---|
+| GET | `/api/admin/ai/overview` | `ai:view` | 模型、TTS 状态与调用汇总，不含密钥 |
+| GET | `/api/admin/ai/prompts` | `ai:view` | 提示词列表 |
+| PUT | `/api/admin/ai/prompts/{key}` | `ai:edit` | 更新提示词，body `{content}` |
+| GET | `/api/admin/ai/usage?page=&pageSize=` | `ai:view` | 最近调用明细 |
+
+提示词 key：`interview_system`（AI 面试官）、`support_system`（AI 客服）。占位符由服务端渲染，面试官支持 `{questionTitle}`、`{questionContent}`、`{answer}`，客服支持 `{knowledge}`。
+
+## 10. 视频讲解
 
 用户端（登录后可用）：
 

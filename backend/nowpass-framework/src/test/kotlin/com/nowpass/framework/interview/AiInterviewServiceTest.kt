@@ -1,6 +1,7 @@
 package com.nowpass.framework.interview
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.nowpass.framework.ai.AiAdminService
 import com.nowpass.framework.config.NowPassProperties
 import com.nowpass.system.domain.model.QuestionAnswer
 import com.nowpass.system.domain.model.QuestionDetail
@@ -22,7 +23,11 @@ class AiInterviewServiceTest {
         `when`(detail(1)).thenReturn(QuestionDetail(1, 1, "Java", "medium", "并发控制", "如何实现并发控制？", null, emptyList(), null))
         `when`(answer(1)).thenReturn(QuestionAnswer(1, "参考答案专属标记", null))
     }
-    private val service = AiInterviewService(questions, properties)
+    private val aiAdmin = mock(AiAdminService::class.java).apply {
+        // 测试不加载数据库提示词，统一回退到内置文案
+        `when`(renderPrompt(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyMap())).thenReturn(null)
+    }
+    private val service = AiInterviewService(questions, properties, aiAdmin)
 
     @Test
     fun `未配置密钥时明确报告练习模式且提示不泄露参考答案`() {

@@ -30,6 +30,8 @@
 | `user_question_progress` | 刷题记录 | 看过次数、是否揭晓答案、自评掌握度 |
 | `interview_session` | AI 面试场次 | 结束时写 `report_md` |
 | `interview_message` | 面试对话 | 按 id 升序还原对话 |
+| `ai_prompt` | AI 提示词模板 | `{占位符}` 由服务端渲染 |
+| `ai_usage_log` | AI 调用用量 | 场景、模型、字数、耗时 |
 
 ## 3. 关键字段说明
 

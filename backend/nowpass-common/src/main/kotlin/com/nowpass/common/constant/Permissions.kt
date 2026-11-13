@@ -51,4 +51,8 @@ object Permissions {
 
     // ---- 操作日志 ----
     const val OPERLOG_LIST = "monitor:operlog:list"
+
+    // ---- AI 管理 ----
+    const val AI_VIEW = "ai:view"
+    const val AI_EDIT = "ai:edit"
 }

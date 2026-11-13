@@ -315,3 +315,46 @@ export interface InterviewSessionDetail {
   reportMd: string | null
   messages: InterviewHistoryMessage[]
 }
+
+export interface AiUsageSummary {
+  totalCalls: number
+  interviewCalls: number
+  supportCalls: number
+  failedCalls: number
+  avgLatencyMs: number
+}
+
+export interface AiOverview {
+  interviewProvider: string
+  interviewModel: string | null
+  interviewConfigured: boolean
+  ttsEnabled: boolean
+  ttsVoice: string
+  ttsProvider: string
+  usage: AiUsageSummary
+}
+
+export interface AiPrompt {
+  key: string
+  name: string
+  content: string
+  description: string | null
+  updateTime: string
+}
+
+export interface AiUsageItem {
+  id: number
+  scene: string
+  provider: string | null
+  userId: number | null
+  success: boolean
+  promptChars: number
+  replyChars: number
+  latencyMs: number
+  createTime: string
+}
+
+export interface SupportReply {
+  reply: string
+  provider: string
+}

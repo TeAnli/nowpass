@@ -10,6 +10,28 @@
 - 前端真实接口联调（需先启动 `pnpm docker:up`）
 - 生产部署时将 `frontend/dist` 打包进后端静态资源
 
+## [0.29.0] - 2026-11-14
+
+### 新增
+- AI 后台管理页 `/admin/ai`：模型与 TTS 状态、调用汇总、提示词编辑、最近调用明细
+- 提示词落库（`ai_prompt`），改文案不再需要发版；面试官与客服各一套
+- AI 调用用量记录（`ai_usage_log`）：场景、模型、用户、成功与否、输入输出字数、耗时
+- AI 客服：用户端右下角悬浮入口，基于站点知识回答使用问题，带快捷提问
+- 新增权限点 `ai:view` / `ai:edit`
+- `V17__ai_admin.sql`：`ai_prompt`、`ai_usage_log` 与两套初始提示词
+
+### 变更
+- `AiInterviewService` 改为读取数据库提示词，缺失时回退内置文案；每次调用写入用量
+- 面试对话接口增加 `userId` 参数，用于用量归属
+
+### 验证
+- 后端 `clean build`（含单元测试）通过，V17 迁移成功
+- `/api/admin/ai/overview` 返回 deepseek + TTS 已启用（知小夏）
+- `/api/admin/ai/prompts` 返回 `interview_system`、`support_system`
+- `/api/support/chat` 真实模型回答成功，用量从 0 增至 1（avg 1306ms）
+- `/admin/ai` 与首页客服悬浮按钮渲染正常
+- 前端 typecheck / lint / build 通过，容器 healthy
+
 ## [0.28.0] - 2026-11-14
 
 ### 新增

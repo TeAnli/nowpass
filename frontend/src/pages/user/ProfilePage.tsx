@@ -1,5 +1,6 @@
 import { Alert, App as AntApp, Button, Form, Input, Tag } from 'antd'
 import { AppIcon } from '@/components/AppIcon'
+import { LearningPanel } from '@/components/LearningPanel'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { authApi } from '@/api/auth'
@@ -104,6 +105,7 @@ export function ProfilePage() {
           </section>
         </div>
       </div>
+      <LearningPanel />
     </div>
   )
 }

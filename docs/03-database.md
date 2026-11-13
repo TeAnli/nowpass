@@ -25,6 +25,11 @@
 | `question_category` | 题目分类（单层） | 不做树形 |
 | `question` | 面试题 + 标准答案 | `options jsonb`、`tags text[]` |
 | `sys_oper_log` | 操作日志 | 只读查询用途，不存业务数据 |
+| `question_major_category` | 题库大类 | 分类通过 `major_category_id` 归属大类 |
+| `user_favorite` | 用户收藏 | 联合主键 `(user_id, question_id)` |
+| `user_question_progress` | 刷题记录 | 看过次数、是否揭晓答案、自评掌握度 |
+| `interview_session` | AI 面试场次 | 结束时写 `report_md` |
+| `interview_message` | 面试对话 | 按 id 升序还原对话 |
 
 ## 3. 关键字段说明
 

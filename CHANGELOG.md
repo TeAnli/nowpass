@@ -10,6 +10,27 @@
 - 前端真实接口联调（需先启动 `pnpm docker:up`）
 - 生产部署时将 `frontend/dist` 打包进后端静态资源
 
+## [0.28.0] - 2026-11-14
+
+### 新增
+- 题目收藏：详情页收藏按钮、收藏状态查询、取消收藏
+- 刷题记录：打开题目自动记录、揭晓答案打点、答案下方自评掌握度（会 / 模糊 / 不会）
+- AI 面试历史：场次、逐轮对话、结束点评全部落库，可在个人中心回看
+- 个人中心新增「学习记录」面板：收藏数、已读数、掌握度分布、面试场次 + 三个列表页签
+- `V16__user_learning_data.sql`：`user_favorite`、`user_question_progress`、`interview_session`、`interview_message`
+
+### 变更
+- 面试页开始面试时自动创建场次，每轮对话静默写库；保存失败不打断面试
+- 新增接口：`/api/user/favorites`、`/api/user/progress`、`/api/user/learning/summary`、`/api/interview/sessions`
+
+### 验证
+- 后端 `compileKotlin` 通过，V16 迁移成功
+- 收藏增删查、刷题记录、面试场次创建/追加/结束/详情/列表接口实测通过
+- `/api/user/learning/summary` 返回收藏 1、已读 1、模糊 1、面试 1
+- 前端 typecheck / lint / build 通过
+- `/questions/61` 渲染出收藏按钮，`/profile` 渲染出学习记录面板
+- 前后端容器 healthy
+
 ## [0.27.0] - 2026-11-13
 
 ### 变更

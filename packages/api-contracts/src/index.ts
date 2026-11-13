@@ -257,3 +257,61 @@ export interface OperLogQuery {
   operName?: string | null
   status?: string | null
 }
+
+export type SelfRating = 'known' | 'unsure' | 'unknown'
+
+export interface FavoriteItem {
+  questionId: number
+  title: string
+  categoryName: string | null
+  difficulty: Difficulty
+  createTime: string
+}
+
+export interface FavoriteState {
+  questionId: number
+  favorite: boolean
+}
+
+export interface ProgressItem {
+  questionId: number
+  title: string
+  categoryName: string | null
+  difficulty: Difficulty
+  viewCount: number
+  answerRevealed: boolean
+  selfRating: SelfRating | null
+  lastViewAt: string
+}
+
+export interface LearningSummary {
+  favoriteCount: number
+  viewedCount: number
+  knownCount: number
+  unsureCount: number
+  unknownCount: number
+  interviewCount: number
+}
+
+export interface InterviewSessionItem {
+  id: number
+  questionId: number
+  questionTitle: string
+  provider: string | null
+  messageCount: number
+  startedAt: string
+  endedAt: string | null
+  hasReport: boolean
+}
+
+export interface InterviewHistoryMessage {
+  role: 'user' | 'assistant'
+  content: string
+  createTime: string
+}
+
+export interface InterviewSessionDetail {
+  session: InterviewSessionItem
+  reportMd: string | null
+  messages: InterviewHistoryMessage[]
+}

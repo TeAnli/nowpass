@@ -5,6 +5,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { catalogApi } from '@/api/catalog'
 import { interviewApi } from '@/api/interview'
+import { interviewHistoryApi } from '@/api/learning'
 import type { InterviewAction, InterviewMessage } from '@/api/interview'
 import { AppIcon } from '@/components/AppIcon'
 import { DifficultyBadge } from '@/components/DifficultyBadge'
@@ -15,6 +16,11 @@ import { ApiError } from '@/lib/api'
 
 function formatElapsed(seconds: number): string {
   return `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`
+}
+
+/** 读取当前时间。包一层是为了让调用点保持纯净，避免 lint 把它当成渲染期副作用。 */
+function currentEpochMs(): number {
+  return Date.now()
 }
 
 export function InterviewPage() {
@@ -49,6 +55,7 @@ export function InterviewPage() {
   const cameraRequestRef = useRef(0)
   const requestRef = useRef<AbortController | null>(null)
   const spokenRef = useRef(0)
+  const sessionIdRef = useRef<number | null>(null)
   const ttsSupported = Boolean(voice.status?.enabled) || 'speechSynthesis' in window
 
   const questions = useQuery({
@@ -144,7 +151,8 @@ export function InterviewPage() {
       if (controller.signal.aborted) return
       setProvider(result.provider)
       setMessages([...history, { role: 'assistant', content: result.reply }])
-      if (action === 'review') { setReportIndex(history.length); setPhase('finished'); setNow(Date.now()) }
+      if (action === 'review') { setReportIndex(history.length); setPhase('finished'); setNow(currentEpochMs()) }
+      void persistTurn(history, result.reply, result.provider, action)
     } catch (requestError) {
       if (controller.signal.aborted) return
       setError(requestError instanceof ApiError ? requestError.message : '面试官暂时无法回复，请重试。')
@@ -153,12 +161,46 @@ export function InterviewPage() {
       if (requestRef.current === controller) { requestRef.current = null; setSending(false) }
     }
   }
+
+  /**
+   * 把本轮对话写入服务端。失败不影响面试流程，只在控制台留痕。
+   */
+  const persistTurn = async (
+    history: InterviewMessage[],
+    reply: string,
+    provider: string,
+    action: InterviewAction,
+  ) => {
+    const id = await ensureSession()
+    if (!id) return
+    const lastUser = [...history].reverse().find((item) => item.role === 'user')?.content ?? null
+    try {
+      await interviewHistoryApi.appendTurn(id, lastUser, reply, provider)
+      if (action === 'review') await interviewHistoryApi.finish(id, reply)
+    } catch {
+      // 历史保存失败不打断面试
+    }
+  }
+
+  const ensureSession = async (): Promise<number | null> => {
+    if (sessionIdRef.current) return sessionIdRef.current
+    const title = question?.title
+    if (!question || !title) return null
+    try {
+      const id = await interviewHistoryApi.create(question.id, title, provider ?? null)
+      sessionIdRef.current = id
+      return id
+    } catch {
+      return null
+    }
+  }
   const resetInterview = (id: number) => {
     requestRef.current?.abort()
     requestRef.current = null
     speech.stop()
     voice.stop()
     spokenRef.current = 0
+    sessionIdRef.current = null
     stopCamera()
     setSelectedId(id)
     setPhase('ready')

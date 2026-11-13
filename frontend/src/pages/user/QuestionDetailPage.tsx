@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Button, Drawer, Skeleton, Tag } from 'antd'
+import { App as AntApp, Button, Drawer, Skeleton, Tag, Tooltip } from 'antd'
 import { Link, useLocation, useParams } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import type { SelfRating } from '@nowpass/api-contracts'
 import { catalogApi } from '@/api/catalog'
+import { learningApi } from '@/api/learning'
 import { AppIcon } from '@/components/AppIcon'
 import { DifficultyBadge } from '@/components/DifficultyBadge'
 import { ErrorState } from '@/components/ErrorState'
@@ -38,6 +40,49 @@ function AnswerBody({ questionId }: { questionId: number }) {
   )
 }
 
+const RATING_OPTIONS: Array<{ value: SelfRating; label: string; icon: string }> = [
+  { value: 'known', label: '会', icon: 'lucide:check' },
+  { value: 'unsure', label: '模糊', icon: 'lucide:circle-help' },
+  { value: 'unknown', label: '不会', icon: 'lucide:x' },
+]
+
+function SelfRatingBar({ questionId }: { questionId: number }) {
+  const queryClient = useQueryClient()
+  const { message } = AntApp.useApp()
+  const [rated, setRated] = useState<SelfRating | null>(null)
+  const rate = useMutation({
+    mutationFn: (value: SelfRating) => learningApi.recordProgress(questionId, { selfRating: value }),
+    onSuccess: (_data, value) => {
+      setRated(value)
+      void queryClient.invalidateQueries({ queryKey: ['learning-summary'] })
+      void queryClient.invalidateQueries({ queryKey: ['learning-progress'] })
+      message.success('已记录掌握度')
+    },
+    onError: () => message.error('记录失败，请稍后再试'),
+  })
+
+  return (
+    <div className="self-rating">
+      <p className="self-rating__title">这道题，你现在掌握到什么程度？</p>
+      <div className="self-rating__options">
+        {RATING_OPTIONS.map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            className={rated === option.value ? 'self-rating__item is-active' : 'self-rating__item'}
+            aria-pressed={rated === option.value}
+            disabled={rate.isPending}
+            onClick={() => rate.mutate(option.value)}
+          >
+            <AppIcon icon={option.icon} size={14} />
+            {option.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function AnswerHeader({ onClose }: { onClose: () => void }) {
   return (
     <div className="answer-panel__header">
@@ -58,12 +103,47 @@ export function QuestionDetailPage() {
   const [revealed, setRevealed] = useState(false)
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const answerPanelRef = useRef<HTMLElement | null>(null)
+  const queryClient = useQueryClient()
+  const { message } = AntApp.useApp()
 
   const question = useQuery({
     queryKey: ['question', questionId],
     queryFn: () => catalogApi.getQuestion(questionId),
     enabled: Number.isFinite(questionId) && questionId > 0,
   })
+
+  const favorite = useQuery({
+    queryKey: ['favorite-state', questionId],
+    queryFn: () => learningApi.favoriteState(questionId),
+    enabled: Number.isFinite(questionId) && questionId > 0,
+  })
+
+  const toggleFavorite = useMutation({
+    mutationFn: async () => {
+      if (favorite.data?.favorite) await learningApi.removeFavorite(questionId)
+      else await learningApi.addFavorite(questionId)
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['favorite-state', questionId] })
+      void queryClient.invalidateQueries({ queryKey: ['learning-favorites'] })
+      void queryClient.invalidateQueries({ queryKey: ['learning-summary'] })
+      message.success(favorite.data?.favorite ? '已取消收藏' : '已加入收藏')
+    },
+    onError: () => message.error('操作失败，请稍后再试'),
+  })
+
+  useEffect(() => {
+    if (!Number.isFinite(questionId) || questionId <= 0) return
+    void learningApi.recordProgress(questionId, {}).then(() => {
+      void queryClient.invalidateQueries({ queryKey: ['learning-summary'] })
+      void queryClient.invalidateQueries({ queryKey: ['learning-progress'] })
+    }).catch(() => undefined)
+  }, [questionId, queryClient])
+
+  useEffect(() => {
+    if (!revealed || !Number.isFinite(questionId) || questionId <= 0) return
+    void learningApi.recordProgress(questionId, { answerRevealed: true }).catch(() => undefined)
+  }, [revealed, questionId])
 
   const backTo = useMemo(() => {
     const state = location.state as { from?: string } | null
@@ -123,6 +203,7 @@ export function QuestionDetailPage() {
           先在心里答一遍，再对照。这里不做判分，答案只负责把话说清楚。
         </p>
         <AnswerBody questionId={questionId} />
+        <SelfRatingBar questionId={questionId} />
       </div>
     </>
   )
@@ -147,6 +228,18 @@ export function QuestionDetailPage() {
                   {tag}
                 </Tag>
               ))}
+              <Tooltip title={favorite.data?.favorite ? '取消收藏' : '收藏这道题'}>
+                <Button
+                  size="small"
+                  className={favorite.data?.favorite ? 'favorite-button is-active' : 'favorite-button'}
+                  aria-pressed={Boolean(favorite.data?.favorite)}
+                  loading={toggleFavorite.isPending}
+                  onClick={() => toggleFavorite.mutate()}
+                  icon={<AppIcon icon={favorite.data?.favorite ? 'lucide:bookmark-check' : 'lucide:bookmark'} size={14} />}
+                >
+                  {favorite.data?.favorite ? '已收藏' : '收藏'}
+                </Button>
+              </Tooltip>
             </div>
             <Link className="ai-interview-entry" to={`/interview?questionId=${detail.id}`}>
               <AppIcon icon="lucide:bot" size={16} />

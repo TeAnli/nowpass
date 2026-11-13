@@ -2409,3 +2409,71 @@ body {
 }
 
 
+
+/* ---------- learning data: favorite / self rating / profile panel ---------- */
+.favorite-button.ant-btn { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 9px; border-radius: 999px; font-size: 11px; }
+.favorite-button.is-active.ant-btn { border-color: var(--color-primary); background: var(--color-primary-soft); color: var(--color-primary); }
+
+.self-rating { margin-top: 22px; padding: 14px 16px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface-muted); }
+.self-rating__title { margin: 0 0 10px; color: var(--color-text-secondary); font-size: 12px; }
+.self-rating__options { display: flex; flex-wrap: wrap; gap: 8px; }
+.self-rating__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 140ms ease, background-color 140ms ease, color 140ms ease;
+}
+.self-rating__item:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.self-rating__item.is-active { border-color: var(--color-primary); background: var(--color-primary-soft); color: var(--color-primary); font-weight: 600; }
+.self-rating__item:disabled { opacity: 0.6; cursor: default; }
+
+.learning-panel { margin-top: 18px; padding: 20px; }
+.learning-panel__head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.learning-panel__head h2 { margin: 3px 0 0; font-size: 1.35rem; }
+.learning-stats { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; margin: 14px 0 6px; }
+.learning-stats div { display: grid; gap: 2px; padding: 10px 12px; border: 1px solid var(--color-border); border-radius: 8px; background: var(--color-surface-muted); }
+.learning-stats strong { font-size: 1.25rem; line-height: 1; }
+.learning-stats span { color: var(--color-text-muted); font-size: 10px; }
+.learning-tabs .ant-tabs-nav { margin-bottom: 8px; }
+.learning-list { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.learning-list li { display: flex; align-items: center; gap: 10px; border-top: 1px solid var(--color-border); }
+.learning-list li:first-child { border-top: 0; }
+.learning-list li > a, .learning-list__button {
+  display: grid;
+  flex: 1;
+  gap: 3px;
+  min-width: 0;
+  padding: 10px 2px;
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+}
+.learning-list li > a:hover .learning-list__title, .learning-list__button:hover .learning-list__title { color: var(--color-primary); }
+.learning-list__title { overflow: hidden; font-size: 13px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.learning-list__meta { color: var(--color-text-muted); font-size: 10px; }
+.learning-list li > svg { color: var(--color-text-muted); }
+
+.learning-session { margin-top: 16px; padding: 16px; border: 1px solid var(--color-border); border-radius: 10px; background: var(--color-surface-muted); }
+.learning-session__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.learning-session__head h3 { margin: 3px 0 0; font-size: 1rem; }
+.learning-session__close { padding: 4px; border: 0; background: transparent; color: var(--color-text-muted); cursor: pointer; }
+.learning-session__messages { display: grid; gap: 12px; max-height: 46vh; margin-top: 12px; overflow-y: auto; padding-right: 4px; }
+.learning-session__message { display: grid; gap: 4px; padding: 10px 12px; border-radius: 10px; background: var(--color-surface); }
+.learning-session__message.is-user { background: var(--color-primary-soft); }
+.learning-session__role { color: var(--color-text-muted); font-size: 10px; }
+.learning-session__message p { margin: 0; font-size: 13px; line-height: 1.8; white-space: pre-wrap; }
+.learning-session__message .markdown { font-size: 13px; line-height: 1.8; }
+.learning-session__report { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--color-border-strong); }
+.learning-session__report .markdown { font-size: 13px; line-height: 1.8; }
+@media (max-width: 900px) {
+  .learning-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}

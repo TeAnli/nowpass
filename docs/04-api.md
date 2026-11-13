@@ -204,13 +204,40 @@ token 为登录接口返回的 32 位字符串（Redis 会话键的一部分）�
 | 方法 | 路径 | 说明 |
 |---|---|---|
 | POST | `/api/interview/chat` | 登录后可用。携带 `questionId` 与最近 `history`，返回面试官回复 |
-
 入参：`{ "questionId": 1, "history": [{ "role": "user", "content": "..." }] }`。
 `history` 最多 20 条，单条最多 4000 字；`role` 只接受 `user` / `assistant`。
 响应包含 `reply`、`provider`（`openai` / `local` / `local-fallback`）与 `questionId`。
 未配置 `INTERVIEW_API_KEY` 时使用本地模拟面试官。
 
-## 8. 视频讲解
+## 8. 学习数据与面试历史
+
+收藏与刷题记录（登录后操作自己的数据）：
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| GET | `/api/user/favorites?page=&pageSize=` | 收藏列表 |
+| GET | `/api/user/favorites/{questionId}` | 是否已收藏 |
+| POST | `/api/user/favorites` | 收藏题目，body `{questionId}` |
+| DELETE | `/api/user/favorites/{questionId}` | 取消收藏 |
+| POST | `/api/user/progress/{questionId}` | 记录刷题行为，body 可带 `answerRevealed`、`selfRating` |
+| GET | `/api/user/progress?page=&pageSize=` | 刷题记录列表 |
+| GET | `/api/user/learning/summary` | 收藏数、已读数、掌握度分布、面试场次 |
+
+`selfRating` 取值：`known` 会 / `unsure` 模糊 / `unknown` 不会。
+
+AI 面试历史：
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| POST | `/api/interview/sessions` | 创建场次，body `{questionId, questionTitle, provider}` |
+| POST | `/api/interview/sessions/{id}/turns` | 追加一轮，body `{userContent, assistantContent, provider}` |
+| POST | `/api/interview/sessions/{id}/finish` | 结束并保存点评，body `{reportMd}` |
+| GET | `/api/interview/sessions?page=&pageSize=` | 我的面试历史 |
+| GET | `/api/interview/sessions/{id}` | 详情：完整对话 + 点评 |
+
+所有接口只允许访问当前登录用户自己的数据，越权返回 404。
+
+## 9. 视频讲解
 
 用户端（登录后可用）：
 

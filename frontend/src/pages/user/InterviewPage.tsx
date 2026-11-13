@@ -247,11 +247,26 @@ export function InterviewPage() {
   return (
     <div className="page-container interview-page">
       <header className="interview-heading">
-        <div><p className="eyebrow">NOWPASS / INTERVIEW STUDIO</p><h1>你的下一场面试，从这里开始。</h1>
-          <p className="page-heading__lead">把知识变成表达。让面试官追问，找到回答里的下一步。</p></div>
+        <div><p className="eyebrow">NOWPASS / INTERVIEW STUDIO</p><h1>模拟面试间</h1></div>
         <div className="interview-heading__meta"><span className={`interview-live-dot${active ? ' is-active' : ''}`} aria-hidden="true" />
           <span>{active ? '面试中' : phase === 'finished' ? '已完成' : '准备就绪'}</span><strong className="mono">{formatElapsed(elapsed)}</strong></div>
       </header>
+
+      <section className="interview-topic" aria-labelledby="interview-topic-title">
+        <div className="interview-topic__label">
+          <span className="eyebrow">02 / CURRENT QUESTION</span>
+          {question && <span className="interview-topic__meta">
+            <span>{question.categoryName ?? '技术面试'}</span>
+            <DifficultyBadge value={question.difficulty} />
+          </span>}
+        </div>
+        <h2 id="interview-topic-title">{question ? question.title : '先从左侧选择一道题'}</h2>
+        <div className="interview-topic__foot">
+          <p>先讲理解，再谈原理，最后用一个例子说服面试官。</p>
+          {question && <Link to={`/questions/${question.id}`} target="_blank" rel="noreferrer">查看完整题目 <AppIcon icon="lucide:arrow-up-right" size={13} /></Link>}
+        </div>
+      </section>
+
       <div className="interview-layout">
         <aside className="surface-card interview-side" aria-label="面试准备">
           <div className="interview-side__head"><p className="eyebrow">01 / PREPARE</p><h2>面试准备</h2></div>
@@ -261,10 +276,6 @@ export function InterviewPage() {
             placeholder="搜索面试题" className="interview-question-select" />
           {questions.isError && <Alert type="error" message="题目加载失败" action={<Button size="small" onClick={() => void questions.refetch()}>重试</Button>} />}
           {linkedQuestion.isError && !selectedQuestion && <Alert type="error" message="当前题目不可用，请选择其他题目。" />}
-          {question && <div className="interview-question-card">
-            <div className="interview-question-card__meta"><span>{question.categoryName ?? '技术面试'}</span><DifficultyBadge value={question.difficulty} /></div>
-            <h3>{question.title}</h3><Link to={`/questions/${question.id}`} target="_blank" rel="noreferrer">查看题目 <AppIcon icon="lucide:arrow-up-right" size={13} /></Link>
-          </div>}
           <div className="interview-side__buttons">
             <Button type="primary" icon={<AppIcon icon="lucide:play" size={15} />} onClick={startInterview} disabled={!question || sending || active}>{phase === 'finished' ? '再练一次' : '开始面试'}</Button>
             <Tooltip title="随机选择另一道题"><Button aria-label="随机一题" icon={<AppIcon icon="lucide:shuffle" size={15} />} disabled={!rows.length || active || sending} onClick={() => {
@@ -288,10 +299,10 @@ export function InterviewPage() {
           <div className="interview-checklist"><span><AppIcon icon="lucide:check" size={14} /> 文字随时可用</span><span><AppIcon icon="lucide:mic" size={14} /> 语音转文字后可编辑</span></div>
         </aside>
         <section className="surface-card interview-room" aria-labelledby="interview-room-title">
-          <header className="interview-room__head"><div className="interview-ai-avatar" aria-hidden="true"><AppIcon icon="lucide:audio-lines" size={23} /></div>
+          <header className="interview-room__head"><div className="interview-ai-avatar" aria-hidden="true"><AppIcon icon="lucide:audio-lines" size={20} /></div>
             <div><h2 id="interview-room-title">NowPass 面试官</h2><p>{sending ? '正在整理思路…' : phase === 'finished' ? '本场已结束，回顾建议后再练一次。' : '一次一个问题，沿着你的回答深入。'}</p></div>
             <Tag bordered={false} color={cloud ? 'green' : 'default'}>{providerLabel}</Tag></header>
-          <div className="interview-session-bar"><span>02 / {phase === 'finished' ? 'REVIEW' : 'CONVERSATION'}</span><span>已回答 <strong>{answers}</strong> 轮 · {formatElapsed(elapsed)}</span></div>
+          <div className="interview-session-bar"><span>03 / {phase === 'finished' ? 'REVIEW' : 'CONVERSATION'}</span><span>已回答 <strong>{answers}</strong> 轮 · {formatElapsed(elapsed)}</span></div>
           {status.isError ? <Alert className="interview-model-notice" type="warning" message="模型状态获取失败" action={<Button size="small" onClick={() => void status.refetch()}>重试</Button>} />
             : currentProvider === 'local-fallback' ? <Alert className="interview-model-notice" type="warning" showIcon message="云端模型暂时不可用，当前回复来自本地练习。稍后发送会重新尝试模型。" />
               : status.data && !status.data.configured && <div className="interview-model-notice"><AppIcon icon="lucide:info" size={15} /> 当前为本地练习；配置 DeepSeek 后可获得针对回答的 AI 追问与点评。</div>}

@@ -32,6 +32,7 @@ export function InterviewPage() {
   const [now, setNow] = useState(() => Date.now())
   const [camera, setCamera] = useState<'off' | 'requesting' | 'on'>('off')
   const [cameraError, setCameraError] = useState<string | null>(null)
+  const [panelOpen, setPanelOpen] = useState(false)
   const [autoSpeak, setAutoSpeak] = useState(() => {
     try {
       return localStorage.getItem('nowpass.interview.autoSpeak') !== '0'
@@ -245,31 +246,49 @@ export function InterviewPage() {
   const canInteract = active && !sending && !failedAction
 
   return (
-    <div className="page-container interview-page">
-      <header className="interview-heading">
-        <div><p className="eyebrow">NOWPASS / INTERVIEW STUDIO</p><h1>模拟面试间</h1></div>
-        <div className="interview-heading__meta"><span className={`interview-live-dot${active ? ' is-active' : ''}`} aria-hidden="true" />
-          <span>{active ? '面试中' : phase === 'finished' ? '已完成' : '准备就绪'}</span><strong className="mono">{formatElapsed(elapsed)}</strong></div>
+    <div className="interview-agent">
+      {panelOpen && (
+        <button type="button" className="agent-scrim" aria-label="关闭设置面板" onClick={() => setPanelOpen(false)} />
+      )}
+
+      <header className="agent-bar">
+        <div className="agent-bar__topic">
+          <span className="agent-bar__mark" aria-hidden="true"><AppIcon icon="lucide:audio-lines" size={15} /></span>
+          <div className="agent-bar__text">
+            <h1 title={question?.title ?? undefined}>{question ? question.title : '未选择题目'}</h1>
+            <span className="agent-bar__meta">
+              <span>{question?.categoryName ?? '技术面试'}</span>
+              {question && <DifficultyBadge value={question.difficulty} />}
+              {question && <Link to={`/questions/${question.id}`} target="_blank" rel="noreferrer">查看题目 <AppIcon icon="lucide:arrow-up-right" size={11} /></Link>}
+            </span>
+          </div>
+        </div>
+        <div className="agent-bar__actions">
+          <span className={active ? 'agent-bar__status is-active' : 'agent-bar__status'}>
+            <span className="agent-live-dot" aria-hidden="true" />
+            {active ? '面试中' : phase === 'finished' ? '已完成' : '准备就绪'}
+          </span>
+          <span className="agent-bar__timer mono">{formatElapsed(elapsed)}</span>
+          {answers > 0 && <span className="agent-bar__rounds mono">{answers} 轮</span>}
+          <Tag bordered={false} color={cloud ? 'green' : 'default'} className="agent-bar__provider">{providerLabel}</Tag>
+          {active && (
+            <Button size="small" type="text" className="agent-bar__finish" disabled={sending} onClick={finishInterview}>结束点评</Button>
+          )}
+          <Button
+            size="small"
+            type="text"
+            className="agent-bar__panel-toggle"
+            aria-label={panelOpen ? '关闭设置面板' : '打开设置面板'}
+            aria-expanded={panelOpen}
+            icon={<AppIcon icon="lucide:sliders-horizontal" size={16} />}
+            onClick={() => setPanelOpen((open) => !open)}
+          />
+        </div>
       </header>
 
-      <section className="interview-topic" aria-labelledby="interview-topic-title">
-        <div className="interview-topic__label">
-          <span className="eyebrow">02 / CURRENT QUESTION</span>
-          {question && <span className="interview-topic__meta">
-            <span>{question.categoryName ?? '技术面试'}</span>
-            <DifficultyBadge value={question.difficulty} />
-          </span>}
-        </div>
-        <h2 id="interview-topic-title">{question ? question.title : '先从左侧选择一道题'}</h2>
-        <div className="interview-topic__foot">
-          <p>先讲理解，再谈原理，最后用一个例子说服面试官。</p>
-          {question && <Link to={`/questions/${question.id}`} target="_blank" rel="noreferrer">查看完整题目 <AppIcon icon="lucide:arrow-up-right" size={13} /></Link>}
-        </div>
-      </section>
-
-      <div className="interview-layout">
-        <aside className="surface-card interview-side" aria-label="面试准备">
-          <div className="interview-side__head"><p className="eyebrow">01 / PREPARE</p><h2>面试准备</h2></div>
+      <div className="agent-body">
+        <aside className={panelOpen ? 'agent-side is-open' : 'agent-side'} aria-label="面试设置">
+          <div className="agent-side__head"><p className="eyebrow">PREPARE</p><h2>面试设置</h2></div>
           <label className="interview-field-label" htmlFor="interview-question">本场练习题目</label>
           <Select id="interview-question" showSearch optionFilterProp="label" value={selectedId ?? undefined}
             onChange={resetInterview} options={questionOptions} loading={questions.isPending} disabled={active || sending}
@@ -287,7 +306,7 @@ export function InterviewPage() {
             <div className="interview-camera-heading"><h3>我的画面</h3><span>{camera === 'on' ? '仅本地预览' : '可选设备'}</span></div>
             <div className={`interview-camera${camera === 'on' ? ' is-on' : ''}`}>
               <video ref={videoRef} autoPlay playsInline muted aria-label="摄像头本地预览" />
-              {camera !== 'on' && <div className="interview-camera__placeholder"><AppIcon icon="lucide:video-off" size={28} />
+              {camera !== 'on' && <div className="interview-camera__placeholder"><AppIcon icon="lucide:video-off" size={26} />
                 <strong>{camera === 'requesting' ? '等待浏览器授权' : '摄像头未开启'}</strong><span>{camera === 'requesting' ? '请在权限提示中选择允许' : '打开画面，练习面对镜头表达'}</span></div>}
               {camera === 'on' && <span className="interview-camera__live"><span /> YOU / 本地预览</span>}
             </div>
@@ -298,56 +317,128 @@ export function InterviewPage() {
           </div>
           <div className="interview-checklist"><span><AppIcon icon="lucide:check" size={14} /> 文字随时可用</span><span><AppIcon icon="lucide:mic" size={14} /> 语音转文字后可编辑</span></div>
         </aside>
-        <section className="surface-card interview-room" aria-labelledby="interview-room-title">
-          <header className="interview-room__head"><div className="interview-ai-avatar" aria-hidden="true"><AppIcon icon="lucide:audio-lines" size={20} /></div>
-            <div><h2 id="interview-room-title">NowPass 面试官</h2><p>{sending ? '正在整理思路…' : phase === 'finished' ? '本场已结束，回顾建议后再练一次。' : '一次一个问题，沿着你的回答深入。'}</p></div>
-            <Tag bordered={false} color={cloud ? 'green' : 'default'}>{providerLabel}</Tag></header>
-          <div className="interview-session-bar"><span>03 / {phase === 'finished' ? 'REVIEW' : 'CONVERSATION'}</span><span>已回答 <strong>{answers}</strong> 轮 · {formatElapsed(elapsed)}</span></div>
-          {status.isError ? <Alert className="interview-model-notice" type="warning" message="模型状态获取失败" action={<Button size="small" onClick={() => void status.refetch()}>重试</Button>} />
-            : currentProvider === 'local-fallback' ? <Alert className="interview-model-notice" type="warning" showIcon message="云端模型暂时不可用，当前回复来自本地练习。稍后发送会重新尝试模型。" />
-              : status.data && !status.data.configured && <div className="interview-model-notice"><AppIcon icon="lucide:info" size={15} /> 当前为本地练习；配置 DeepSeek 后可获得针对回答的 AI 追问与点评。</div>}
-          <div ref={chatRef} className="chat-list" role="log" aria-live="polite" aria-label="面试对话">
-            {phase === 'ready' && <div className="chat-empty"><span className="chat-empty__icon"><AppIcon icon="lucide:audio-lines" size={30} /></span>
-              <p className="eyebrow">PRACTICE MAKES CONFIDENCE</p><h3>给思考一个说出口的机会。</h3><p>选择一道题，点击「开始面试」。<br />先讲理解，再谈原理，最后用一个例子说服面试官。</p>
-              <div className="interview-empty-steps"><span>01 选择题目</span><span>02 自由回答</span><span>03 回顾提升</span></div></div>}
-            {messages.map((message, index) => <div key={index} className={`chat-message chat-message--${message.role === 'user' ? 'user' : 'ai'}`}>
-              {message.role === 'assistant' && <span className="chat-avatar" aria-hidden="true"><AppIcon icon="lucide:bot" size={16} /></span>}
-              <div className="chat-bubble"><span className="chat-message-label">{message.role === 'user' ? '我的回答' : index === reportIndex ? '面试回顾' : '面试官'}</span>
-                {message.role === 'assistant' ? <MarkdownView>{message.content}</MarkdownView> : <p>{message.content}</p>}
-                {message.role === 'assistant' && <button type="button" className="chat-speak" onClick={() => void voice.speak(message.content)} aria-label="朗读这条回复"><AppIcon icon="lucide:volume-2" size={14} /> 朗读</button>}</div>
-            </div>)}
-            {sending && <div className="chat-message chat-message--ai" aria-label="面试官正在思考"><span className="chat-avatar"><AppIcon icon="lucide:bot" size={16} /></span><div className="chat-bubble chat-bubble--typing"><span /><span /><span /></div></div>}
+
+        <section className="agent-main" aria-label="面试对话">
+          <div ref={chatRef} className="agent-scroll" role="log" aria-live="polite">
+            <div className="agent-thread">
+              {status.isError ? <Alert className="agent-notice" type="warning" message="模型状态获取失败" action={<Button size="small" onClick={() => void status.refetch()}>重试</Button>} />
+                : currentProvider === 'local-fallback' ? <Alert className="agent-notice" type="warning" showIcon message="云端模型暂时不可用，当前回复来自本地练习。" />
+                  : status.data && !status.data.configured && <p className="agent-notice agent-notice--plain"><AppIcon icon="lucide:info" size={14} /> 当前为本地练习；配置 DeepSeek 后可获得针对回答的 AI 追问与点评。</p>}
+
+              {phase === 'ready' && (
+                <div className="agent-empty">
+                  <span className="agent-empty__mark" aria-hidden="true"><AppIcon icon="lucide:audio-lines" size={26} /></span>
+                  <h2>准备好就开始吧</h2>
+                  <p>面试官会先请你讲这道题，再根据你的回答继续追问。<br />可以打字，也可以直接说话。</p>
+                  <Button type="primary" size="large" icon={<AppIcon icon="lucide:play" size={16} />} onClick={startInterview} disabled={!question || sending}>开始面试</Button>
+                  <div className="agent-empty__hints">
+                    <span><AppIcon icon="lucide:keyboard" size={13} /> 文字回答</span>
+                    <span><AppIcon icon="lucide:mic" size={13} /> 语音转文字</span>
+                    <span><AppIcon icon="lucide:volume-2" size={13} /> AI 人声播报</span>
+                  </div>
+                </div>
+              )}
+
+              {messages.map((message, index) => (
+                <div key={index} className={`chat-message chat-message--${message.role === 'user' ? 'user' : 'ai'}`}>
+                  {message.role === 'assistant' && <span className="chat-avatar" aria-hidden="true"><AppIcon icon="lucide:bot" size={14} /></span>}
+                  <div className="chat-bubble">
+                    <span className="chat-message-label">{message.role === 'user' ? '我' : index === reportIndex ? '面试回顾' : '面试官'}</span>
+                    {message.role === 'assistant' ? <MarkdownView>{message.content}</MarkdownView> : <p>{message.content}</p>}
+                    {message.role === 'assistant' && (
+                      <button type="button" className="chat-speak" onClick={() => void voice.speak(message.content)} aria-label="朗读这条回复">
+                        <AppIcon icon="lucide:volume-2" size={13} /> 朗读
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+
+              {sending && (
+                <div className="chat-message chat-message--ai" aria-label="面试官正在思考">
+                  <span className="chat-avatar"><AppIcon icon="lucide:bot" size={14} /></span>
+                  <div className="chat-bubble chat-bubble--typing"><span /><span /><span /></div>
+                </div>
+              )}
+
+              {error && (
+                <Alert className="agent-notice" type="error" showIcon message={error} role="alert"
+                  action={<div className="interview-error-actions"><Button size="small" onClick={() => void requestReply(messages, failedAction ?? 'chat')} disabled={sending}>重试</Button><Button size="small" onClick={finishWithoutReview} disabled={sending}>结束并保留记录</Button></div>} />
+              )}
+
+              {phase === 'finished' && (
+                <div className="agent-finished">
+                  <div><AppIcon icon="lucide:circle-check" size={17} /><span>每一次表达，都比上一次更进一步。</span></div>
+                  <div className="agent-finished__actions">
+                    <Button size="small" onClick={exportInterview} icon={<AppIcon icon="lucide:download" size={14} />}>导出记录</Button>
+                    <Button size="small" type="primary" onClick={() => resetInterview(selectedId ?? rows[0]?.id ?? 0)} disabled={!selectedId}>再练一次</Button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-          {error && <Alert className="interview-error" type="error" showIcon message={error} role="alert" action={<div className="interview-error-actions"><Button size="small" onClick={() => void requestReply(messages, failedAction ?? 'chat')} disabled={sending}>重试</Button><Button size="small" onClick={finishWithoutReview} disabled={sending}>结束并保留记录</Button></div>} />}
-          {phase === 'finished' ? <div className="interview-finished"><div><AppIcon icon="lucide:circle-check" size={18} /><span>每一次表达，都比上一次更进一步。</span></div><Button onClick={exportInterview} icon={<AppIcon icon="lucide:download" size={15} />}>导出面试记录</Button></div>
-            : <>
-              <div className="voice-bar"><Tooltip title={speech.supported ? '语音识别为文字，发送前可修改' : '当前浏览器不支持语音识别，请使用文字'}><Button className={speech.listening ? 'voice-button is-listening' : 'voice-button'}
-                type={speech.listening ? 'primary' : 'default'} icon={<AppIcon icon={speech.listening ? 'lucide:mic-off' : 'lucide:mic'} size={16} />} onClick={() => { voice.stop(); speech.toggle() }} disabled={!speech.supported || !canInteract} aria-pressed={speech.listening}>{speech.listening ? '停止聆听' : '语音输入'}</Button></Tooltip>
-                <Button type="text" icon={<AppIcon icon="lucide:lightbulb" size={15} />} disabled={!canInteract} onClick={() => { speech.stop(); void requestReply(messages, 'hint') }}>给我提示</Button>
-                <Tooltip title={ttsSupported ? (voice.status?.enabled ? '自动播放阿里云 AI 人声，失败时回退浏览器语音' : '自动使用浏览器语音朗读') : '当前浏览器不支持语音播报'}>
-                  <Button
-                    type={autoSpeak ? 'primary' : 'default'}
-                    className={voice.speaking || voice.loading ? 'interview-voice-toggle is-speaking' : 'interview-voice-toggle'}
-                    icon={<AppIcon icon={autoSpeak ? 'lucide:volume-2' : 'lucide:volume-x'} size={15} />}
-                    onClick={toggleAutoSpeak}
-                    disabled={!ttsSupported}
-                    aria-pressed={autoSpeak}
-                  >
-                    {voice.loading ? '正在生成' : voice.speaking ? '正在播报' : autoSpeak ? (voice.status?.enabled ? 'AI 人声' : '浏览器语音') : '语音已关'}
-                  </Button>
-                </Tooltip>
-                <Button type="text" className="interview-finish-button" disabled={!canInteract} onClick={finishInterview}>结束并点评 <AppIcon icon="lucide:arrow-up-right" size={14} /></Button>
-                {speech.listening && <span className="voice-status"><span className="voice-wave" aria-hidden="true" />正在听… {speech.interim}</span>}
-                {voice.loading && <span className="voice-status voice-status--speaking"><span className="voice-wave" aria-hidden="true" />正在生成 AI 人声…</span>}
-                {voice.speaking && <span className="voice-status voice-status--speaking"><span className="voice-wave" aria-hidden="true" />正在播报面试官…</span>}
-                {speech.error && <span className="voice-status voice-status--error" role="alert">{speech.error}</span>}
-              </div>
-              <div className="interview-composer"><Input.TextArea ref={inputRef} value={input} maxLength={4000} showCount onChange={(event) => setInput(event.target.value)} onPressEnter={(event) => {
-                if (!event.shiftKey && !event.nativeEvent.isComposing && event.nativeEvent.keyCode !== 229) { event.preventDefault(); sendMessage() }
-              }} autoSize={{ minRows: 2, maxRows: 5 }} placeholder={active ? '说说你的思路，或用语音输入…' : '准备好后，点击左侧「开始面试」'} disabled={!canInteract} aria-label="面试回答输入框" />
-                <Button type="primary" className="interview-send" icon={<AppIcon icon="lucide:arrow-up" size={18} />} onClick={sendMessage} disabled={!canInteract || !input.trim()} loading={sending}>发送</Button></div>
-              <p className="interview-composer-note">Enter 发送 · Shift + Enter 换行 <span>对话仅在本页保存，离开前可结束并导出</span></p>
-            </>}
+
+          <div className="agent-dock">
+            <div className="agent-dock__inner">
+              {speech.listening && <p className="voice-status"><span className="voice-wave" aria-hidden="true" />正在听… {speech.interim}</p>}
+              {voice.loading && <p className="voice-status voice-status--speaking"><span className="voice-wave" aria-hidden="true" />正在生成 AI 人声…</p>}
+              {voice.speaking && <p className="voice-status voice-status--speaking"><span className="voice-wave" aria-hidden="true" />正在播报面试官…</p>}
+              {speech.error && <p className="voice-status voice-status--error" role="alert">{speech.error}</p>}
+
+              {phase === 'finished' ? (
+                <p className="agent-dock__finished">本场已结束。可以导出记录，或点「再练一次」重新开始。</p>
+              ) : (
+                <>
+                  <div className={canInteract ? 'agent-composer' : 'agent-composer is-disabled'}>
+                    <Input.TextArea ref={inputRef} className="agent-composer__input" value={input} maxLength={4000}
+                      onChange={(event) => setInput(event.target.value)}
+                      onPressEnter={(event) => {
+                        if (!event.shiftKey && !event.nativeEvent.isComposing && event.nativeEvent.keyCode !== 229) { event.preventDefault(); sendMessage() }
+                      }}
+                      autoSize={{ minRows: 1, maxRows: 6 }}
+                      placeholder={active ? '说说你的思路，Enter 发送…' : '准备好后，点「开始面试」'}
+                      disabled={!canInteract} aria-label="面试回答输入框" />
+                    <div className="agent-composer__tools">
+                      <Tooltip title={speech.supported ? '语音转文字，发送前可修改' : '当前浏览器不支持语音识别'}>
+                        <Button size="small" type={speech.listening ? 'primary' : 'text'} className="agent-tool"
+                          icon={<AppIcon icon={speech.listening ? 'lucide:mic-off' : 'lucide:mic'} size={16} />}
+                          onClick={() => { voice.stop(); speech.toggle() }}
+                          disabled={!speech.supported || !canInteract}
+                          aria-pressed={speech.listening} aria-label={speech.listening ? '停止聆听' : '语音输入'} />
+                      </Tooltip>
+                      <Tooltip title="给我一个提示">
+                        <Button size="small" type="text" className="agent-tool"
+                          icon={<AppIcon icon="lucide:lightbulb" size={16} />}
+                          disabled={!canInteract}
+                          onClick={() => { speech.stop(); void requestReply(messages, 'hint') }}
+                          aria-label="给我提示" />
+                      </Tooltip>
+                      <Tooltip title={ttsSupported ? (voice.status?.enabled ? 'AI 人声播报已开启' : '浏览器语音播报已开启') : '当前浏览器不支持语音播报'}>
+                        <Button size="small" type={autoSpeak ? 'primary' : 'text'} className={voice.speaking || voice.loading ? 'agent-tool is-speaking' : 'agent-tool'}
+                          icon={<AppIcon icon={autoSpeak ? 'lucide:volume-2' : 'lucide:volume-x'} size={16} />}
+                          onClick={toggleAutoSpeak}
+                          disabled={!ttsSupported}
+                          aria-pressed={autoSpeak}
+                          aria-label={autoSpeak ? (voice.status?.enabled ? 'AI 人声已开启' : '浏览器语音已开启') : '语音播报已关闭'} />
+                      </Tooltip>
+                      <span className="agent-composer__spacer" />
+                      <span className="agent-composer__count mono">{input.length}/4000</span>
+                      <Button type="primary" shape="circle" size="small" className="agent-send"
+                        icon={<AppIcon icon="lucide:arrow-up" size={16} />}
+                        onClick={sendMessage}
+                        disabled={!canInteract || !input.trim()}
+                        loading={sending}
+                        aria-label="发送" />
+                    </div>
+                  </div>
+                  <p className="agent-dock__hint">
+                    <span>Enter 发送 · Shift + Enter 换行</span>
+                    <span>对话仅保存在本页</span>
+                  </p>
+                </>
+              )}
+            </div>
+          </div>
         </section>
       </div>
     </div>

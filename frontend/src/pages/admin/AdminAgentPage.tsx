@@ -1,9 +1,8 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { App as AntApp, Button, Input, Spin, Table, Tag, Tooltip } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import { useMutation } from '@tanstack/react-query'
 import type {
-  AgentExecuteResult,
   AgentMessage,
   AgentPendingAction,
   AgentReply,
@@ -13,6 +12,7 @@ import type {
 import { agentApi } from '@/api/agent'
 import { AppIcon } from '@/components/AppIcon'
 import { ApiError } from '@/lib/api'
+import { useAgentChat } from '@/store/agentChat'
 import { AdminPageHeader } from './AdminPageHeader'
 
 const EXAMPLES = [
@@ -44,20 +44,6 @@ const TOOL_ICON: Record<string, string> = {
   create_category: 'lucide:folder-plus',
   publish_video: 'lucide:upload',
   offline_video: 'lucide:archive',
-}
-
-/** 思考链中的一步：running 表示已发起、结果还没回来。 */
-interface Turn {
-  id: number
-  role: 'user' | 'assistant'
-  content: string
-  steps: AgentStep[]
-  tables: AgentTable[]
-  pending: AgentPendingAction[]
-  results?: AgentExecuteResult[]
-  streaming?: boolean
-  currentTool?: string | null
-  error?: string
 }
 
 function DataTable({ table }: { table: AgentTable }) {
@@ -152,15 +138,13 @@ function ThinkingCard({ steps, streaming }: { steps: AgentStep[]; streaming: boo
 export function AdminAgentPage() {
   const { message } = AntApp.useApp()
   const [input, setInput] = useState('')
-  const [turns, setTurns] = useState<Turn[]>([])
-  const [busy, setBusy] = useState(false)
+  const turns = useAgentChat((state) => state.turns)
+  const busy = useAgentChat((state) => state.busy)
+  const appendTurn = useAgentChat((state) => state.appendTurn)
+  const patchTurn = useAgentChat((state) => state.patchTurn)
+  const setBusy = useAgentChat((state) => state.setBusy)
+  const clearChat = useAgentChat((state) => state.clear)
   const scrollRef = useRef<HTMLDivElement | null>(null)
-  const idRef = useRef(0)
-
-  const nextId = () => {
-    idRef.current += 1
-    return idRef.current
-  }
 
   const scrollToBottom = () => {
     window.setTimeout(() => {
@@ -169,19 +153,16 @@ export function AdminAgentPage() {
     }, 40)
   }
 
-  const patchTurn = (id: number, patch: (turn: Turn) => Turn) => {
-    setTurns((current) => current.map((turn) => (turn.id === id ? patch(turn) : turn)))
-  }
+  useEffect(() => {
+    scrollToBottom()
+  }, [])
 
   const execute = useMutation({
     mutationFn: (actions: AgentPendingAction[]) => agentApi.execute(actions),
     onSuccess: (data, actions) => {
-      setTurns((current) => [
-        ...current.map((turn) =>
-          turn.pending === actions ? { ...turn, pending: [] } : turn,
-        ),
-        { id: nextId(), role: 'assistant', content: '', steps: [], tables: [], pending: [], results: data.results },
-      ])
+      const target = turns.find((turn) => turn.pending === actions)
+      if (target) patchTurn(target.id, (turn) => ({ ...turn, pending: [] }))
+      appendTurn({ role: 'assistant', content: '', steps: [], tables: [], pending: [], results: data.results })
       const failed = data.results.filter((item) => !item.success).length
       if (failed === 0) message.success('已执行完成')
       else message.warning(`${failed} 个动作执行失败`)
@@ -199,12 +180,8 @@ export function AdminAgentPage() {
       .map((turn) => ({ role: turn.role, content: turn.content }))
       .filter((item) => item.content.trim().length > 0)
 
-    const assistantId = nextId()
-    setTurns((current) => [
-      ...current,
-      { id: nextId(), role: 'user', content: trimmed, steps: [], tables: [], pending: [] },
-      { id: assistantId, role: 'assistant', content: '', steps: [], tables: [], pending: [], streaming: true },
-    ])
+    appendTurn({ role: 'user', content: trimmed, steps: [], tables: [], pending: [] })
+    const assistantId = appendTurn({ role: 'assistant', content: '', steps: [], tables: [], pending: [], streaming: true })
     setInput('')
     setBusy(true)
     scrollToBottom()
@@ -372,9 +349,18 @@ export function AdminAgentPage() {
             aria-label="给智能体的指令"
           />
           <div className="agent-console__actions">
-            <Tooltip title="写操作会先进入待确认列表">
-              <span className="agent-console__hint"><AppIcon icon="lucide:shield-check" size={13} /> 写操作需二次确认</span>
-            </Tooltip>
+            <div className="agent-console__left">
+              <Tooltip title="写操作会先进入待确认列表">
+                <span className="agent-console__hint"><AppIcon icon="lucide:shield-check" size={13} /> 写操作需二次确认</span>
+              </Tooltip>
+              {turns.length > 0 && (
+                <Tooltip title="清空本页对话，切换页面后不再保留">
+                  <Button size="small" type="text" className="agent-console__clear" icon={<AppIcon icon="lucide:eraser" size={13} />} onClick={clearChat}>
+                    清空对话
+                  </Button>
+                </Tooltip>
+              )}
+            </div>
             <Button
               type="primary"
               icon={<AppIcon icon="lucide:arrow-up" size={16} />}

@@ -264,8 +264,10 @@ AI 管理（需权限点 `ai:view` / `ai:edit`）：
 
 | 方法 | 路径 | 权限 | 说明 |
 |---|---|---|---|
-| POST | `/api/admin/agent/chat` | `ai:view` | body `{message, history}`，返回 `{reply, provider, pendingActions}` |
-| POST | `/api/admin/agent/execute` | `ai:edit` | body `{actions}`，逐条执行并写审计 |
+| POST | `/api/admin/agent/runs` | `ai:view` | 提交任务，body `{message, history}`，返回 `{runId}` |
+| GET | `/api/admin/agent/runs/{id}` | `ai:view` | 轮询进度：状态、思考步骤、表格、待确认动作、结论 |
+| POST | `/api/admin/agent/chat` | `ai:view` | 同步返回完整结果，供脚本或调试使用 |
+| POST | `/api/admin/agent/execute` | `ai:edit` | 执行待确认动作，逐条写审计 |
 
 工具集：
 

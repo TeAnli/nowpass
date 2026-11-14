@@ -10,6 +10,26 @@
 - 前端真实接口联调（需先启动 `pnpm docker:up`）
 - 生产部署时将 `frontend/dist` 打包进后端静态资源
 
+## [0.31.0] - 2026-11-14
+
+### 新增
+- 智能体展示「思考链」：默认折叠，可展开查看每一步工具调用，单步还能再展开看参数与结果
+- 新增 `present_table` 工具：模型把多条数据以结构化表格返回，前端用 Ant Design Table 渲染
+- 待确认动作改为自定义卡片：工具图标、标题、摘要与工具名标签
+- 执行结果改为自定义列表，成功/失败分别着色
+
+### 变更
+- 智能体回复正文改为纯文本渲染，不再走 Markdown，避免出现 Markdown 表格与符号列表
+- 提示词更新：列数据必须用 `present_table`，正文控制在 120 字内
+- `AgentReply` 增加 `steps` 与 `tables` 字段
+- `V19__agent_table_prompt.sql`：更新 `agent_system` 提示词
+
+### 验证
+- 后端 `clean build`（含单测）通过，V19 迁移成功
+- 接口返回：`tables` 1 张（列「分类 id / 分类名 / 题目数量」，5 行）、`steps` 2 步（list_categories → present_table）
+- 真实 UI 交互：点示例 → 渲染 5 行 2 列表格、思考链展开 2 步、回复正文无 Markdown
+- 前端 typecheck / lint / build 通过，容器 healthy
+
 ## [0.30.0] - 2026-11-14
 
 ### 新增

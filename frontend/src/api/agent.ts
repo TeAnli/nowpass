@@ -12,10 +12,29 @@ export interface AgentPendingAction {
   args: Record<string, unknown>
 }
 
+export interface AgentStep {
+  index: number
+  round: number
+  tool: string
+  write: boolean
+  args: string
+  result: string
+  durationMs: number
+  success: boolean
+}
+
+export interface AgentTable {
+  title: string
+  columns: string[]
+  rows: string[][]
+}
+
 export interface AgentReply {
   reply: string
   provider: string
   pendingActions: AgentPendingAction[]
+  steps: AgentStep[]
+  tables: AgentTable[]
 }
 
 export interface AgentExecuteResult {

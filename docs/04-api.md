@@ -274,6 +274,7 @@ AI 管理（需权限点 `ai:view` / `ai:edit`）：
 | `stats_overview` | 只读 | 题目、分类、视频、用户、AI 用量概况 |
 | `search_questions` | 只读 | 按关键词 / 分类名 / 难度搜索，返回 id 与标题 |
 | `list_categories` | 只读 | 分类及题量 |
+| `present_table` | 只读 | 把多条数据以结构化表格返回，前端用表格组件渲染 |
 | `create_question` | 写 | 创建题目，需分类名或分类 id |
 | `delete_question` | 写 | 软删除题目 |
 | `create_category` | 写 | 新建分类 |
@@ -285,6 +286,20 @@ AI 管理（需权限点 `ai:view` / `ai:edit`）：
 - `execute` 才真正调用 service 层，逐条校验并写 `agent_action_log`
 - 单次对话最多 4 轮工具调用、最多 5 个待确认动作
 - 用量记录到 `ai_usage_log`，`scene=agent`
+
+`chat` 响应结构：
+
+```json
+{
+  "reply": "纯文本总结",
+  "provider": "deepseek",
+  "pendingActions": [{ "tool": "create_question", "title": "创建题目", "summary": "...", "args": {} }],
+  "steps": [{ "index": 1, "round": 1, "tool": "list_categories", "write": false, "args": "{}", "result": "...", "durationMs": 12, "success": true }],
+  "tables": [{ "title": "题量最少的 5 个分类", "columns": ["分类 id", "分类名", "题目数量"], "rows": [["2", "JVM", "2"]] }]
+}
+```
+
+前端把 `reply` 按纯文本渲染，`tables` 用表格组件渲染，`steps` 放进可折叠的「思考链」。
 
 ## 11. 视频讲解
 

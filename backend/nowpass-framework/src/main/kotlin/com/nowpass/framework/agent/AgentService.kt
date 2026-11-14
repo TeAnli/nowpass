@@ -66,6 +66,8 @@ class AgentService(
         messages += mapOf("role" to "user", "content" to text)
 
         val pending = mutableListOf<AgentPendingAction>()
+        val steps = mutableListOf<AgentStep>()
+        val tables = mutableListOf<AgentTable>()
         var reply = ""
         val startedAt = System.currentTimeMillis()
 
@@ -97,16 +99,38 @@ class AgentService(
 
                 for (call in toolCalls) {
                     val name = call.path("function").path("name").asText()
-                    val args = parseArgs(call.path("function").path("arguments").asText("{}"))
+                    val rawArgs = call.path("function").path("arguments").asText("{}")
+                    val args = parseArgs(rawArgs)
                     val callId = call.path("id").asText()
-                    val resultText = if (name in WRITE_TOOLS) {
-                        val action = buildPending(name, args)
-                        if (action != null) pending += action
-                        action?.let { "已登记为待确认动作，尚未执行：${it.summary}" } ?: "参数不完整，未登记动作。"
-                    } else {
-                        runCatching { dispatchRead(name, args) }
+                    val callStartedAt = System.currentTimeMillis()
+
+                    val resultText = when {
+                        name in WRITE_TOOLS -> {
+                            val action = buildPending(name, args)
+                            if (action != null) pending += action
+                            action?.let { "已登记为待确认动作，尚未执行：${it.summary}" }
+                                ?: "参数不完整，未登记动作。"
+                        }
+                        name == TOOL_PRESENT_TABLE -> {
+                            val table = buildTable(args)
+                            if (table != null) tables += table
+                            table?.let { "已展示表格「${it.title}」，共 ${it.rows.size} 行。" }
+                                ?: "表格参数不完整，未展示。"
+                        }
+                        else -> runCatching { dispatchRead(name, args) }
                             .getOrElse { "工具 $name 执行失败：${it.message}" }
                     }
+
+                    steps += AgentStep(
+                        index = steps.size + 1,
+                        round = round,
+                        tool = name,
+                        write = name in WRITE_TOOLS,
+                        args = rawArgs.take(2000),
+                        result = resultText.take(2000),
+                        durationMs = (System.currentTimeMillis() - callStartedAt).toInt(),
+                        success = !resultText.startsWith("工具 $name 执行失败"),
+                    )
                     messages += mapOf(
                         "role" to "tool",
                         "tool_call_id" to callId,
@@ -116,7 +140,7 @@ class AgentService(
             }
             if (reply.isBlank()) reply = "已达到工具调用上限，请把任务拆小一些再试。"
             recordUsage(text, reply, true, (System.currentTimeMillis() - startedAt).toInt(), userId)
-            return AgentReply(reply, providerName(), pending)
+            return AgentReply(reply, providerName(), pending, steps, tables)
         } catch (exception: Exception) {
             log.warn("AI 智能体调用失败：{}", exception.javaClass.simpleName)
             recordUsage(text, "", false, (System.currentTimeMillis() - startedAt).toInt(), userId)
@@ -306,6 +330,23 @@ class AgentService(
         return list.mapNotNull { it?.toString()?.trim()?.takeIf { tag -> tag.isNotEmpty() } }.take(10)
     }
 
+    /** 把模型给的二维数组整理成前端可直接渲染的表格。 */
+    private fun buildTable(args: Map<String, Any?>): AgentTable? {
+        val title = args["title"]?.toString()?.trim().takeUnless { it.isNullOrEmpty() } ?: "查询结果"
+        val columns = (args["columns"] as? List<*>)
+            ?.mapNotNull { it?.toString()?.trim()?.takeIf { cell -> cell.isNotEmpty() } }
+            ?: return null
+        if (columns.isEmpty()) return null
+        val rawRows = args["rows"] as? List<*> ?: return null
+        val rows = rawRows.take(MAX_TABLE_ROWS).map { row ->
+            val cells = (row as? List<*>)?.map { it?.toString() ?: "" }
+                ?: listOf(row?.toString() ?: "")
+            (0 until columns.size).map { index -> cells.getOrElse(index) { "" } }
+        }
+        if (rows.isEmpty()) return null
+        return AgentTable(title, columns, rows)
+    }
+
     // ---------------- 模型调用 ----------------
 
     private fun postChat(body: Map<String, Any>): JsonNode =
@@ -376,6 +417,24 @@ class AgentService(
             ),
         ),
         tool("list_categories", "列出所有分类及其题目数量", emptyMap()),
+        tool(
+            TOOL_PRESENT_TABLE,
+            "把多条数据以表格形式展示给管理员。凡是需要列出 2 条以上数据时都用它，不要输出 Markdown 表格",
+            mapOf(
+                "title" to property("string", "表格标题"),
+                "columns" to mapOf(
+                    "type" to "array",
+                    "items" to mapOf("type" to "string"),
+                    "description" to "列名，建议第一列是名称或 id",
+                ),
+                "rows" to mapOf(
+                    "type" to "array",
+                    "description" to "每行是与 columns 等长的字符串数组",
+                    "items" to mapOf("type" to "array", "items" to mapOf("type" to "string")),
+                ),
+            ),
+            required = listOf("title", "columns", "rows"),
+        ),
         tool(
             "create_question",
             "创建一道题目（写操作，需人工确认）",
@@ -460,6 +519,8 @@ class AgentService(
         private const val MAX_ROUNDS = 4
         private const val MAX_HISTORY = 8
         private const val MAX_ACTIONS = 5
+        private const val MAX_TABLE_ROWS = 50
+        private const val TOOL_PRESENT_TABLE = "present_table"
         private const val MAX_MESSAGE_CHARS = 2000
         private val DIFFICULTIES = setOf("easy", "medium", "hard")
         private val WRITE_TOOLS = setOf(

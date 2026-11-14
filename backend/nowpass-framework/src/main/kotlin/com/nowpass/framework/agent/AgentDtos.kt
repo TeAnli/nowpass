@@ -14,10 +14,31 @@ data class AgentPendingAction(
     val args: Map<String, Any?> = emptyMap(),
 )
 
+/** 一次工具调用，用于前端展开查看思考链。 */
+data class AgentStep(
+    val index: Int,
+    val round: Int,
+    val tool: String,
+    val write: Boolean,
+    val args: String,
+    val result: String,
+    val durationMs: Int,
+    val success: Boolean = true,
+)
+
+/** 结构化表格，前端用表格组件渲染，不走 Markdown。 */
+data class AgentTable(
+    val title: String,
+    val columns: List<String>,
+    val rows: List<List<String>>,
+)
+
 data class AgentReply(
     val reply: String,
     val provider: String,
     val pendingActions: List<AgentPendingAction> = emptyList(),
+    val steps: List<AgentStep> = emptyList(),
+    val tables: List<AgentTable> = emptyList(),
 )
 
 data class AgentExecuteResult(

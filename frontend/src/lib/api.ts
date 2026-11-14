@@ -122,6 +122,79 @@ export async function apiRequestBlob(path: string, options: RequestOptions = {})
   return response.blob()
 }
 
+function parseSseChunk(raw: string, onEvent: (event: string, data: unknown) => void): void {
+  let event = 'message'
+  const dataLines: string[] = []
+  raw.split(/\r?\n/).forEach((line) => {
+    if (line.startsWith('event:')) event = line.slice(6).trim()
+    else if (line.startsWith('data:')) dataLines.push(line.slice(5).trim())
+  })
+  if (dataLines.length === 0) return
+  const text = dataLines.join('\n')
+  let parsed: unknown = text
+  try {
+    parsed = JSON.parse(text)
+  } catch {
+    // 非 JSON 数据按原文透传
+  }
+  onEvent(event, parsed)
+}
+
+/** 以 SSE 方式请求接口，逐事件回调；用于流式展示思考过程。 */
+export async function apiStream(
+  path: string,
+  options: RequestOptions,
+  onEvent: (event: string, data: unknown) => void,
+): Promise<void> {
+  let response: Response
+  try {
+    response = await fetch(`${BASE_URL}${path}`, {
+      method: options.method ?? 'POST',
+      headers: authHeaders(options, 'text/event-stream'),
+      body: options.body === undefined ? undefined : JSON.stringify(options.body),
+      signal: options.signal,
+      credentials: 'omit',
+    })
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') throw error
+    throw new ApiError('无法连接服务器，请确认后端已启动后重试。', 0, 0)
+  }
+
+  updateTokenExpiry(response)
+
+  if (response.status === 401 && options.auth !== false) {
+    authStorage.clear()
+    window.dispatchEvent(new Event(AUTH_EXPIRED_EVENT))
+    throw new ApiError('登录状态已过期，请重新登录。', 401, 401)
+  }
+
+  if (!response.ok || !response.body) {
+    const payload = (await response.json().catch(() => null)) as ApiEnvelope<unknown> | null
+    throw new ApiError(
+      payload?.msg ?? `流式请求失败（HTTP ${response.status}）`,
+      payload?.code ?? response.status,
+      response.status,
+    )
+  }
+
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  const boundaryPattern = /\r?\n\r?\n/
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    buffer += decoder.decode(value, { stream: true })
+    let match = boundaryPattern.exec(buffer)
+    while (match) {
+      parseSseChunk(buffer.slice(0, match.index), onEvent)
+      buffer = buffer.slice(match.index + match[0].length)
+      match = boundaryPattern.exec(buffer)
+    }
+  }
+  if (buffer.trim()) parseSseChunk(buffer, onEvent)
+}
+
 export function toQueryString(params: Record<string, unknown>): string {
   const search = new URLSearchParams()
   Object.entries(params).forEach(([key, value]) => {

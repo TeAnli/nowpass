@@ -21,6 +21,7 @@ export interface AgentStep {
   result: string
   durationMs: number
   success: boolean
+  status: 'running' | 'done'
 }
 
 export interface AgentTable {
@@ -37,6 +38,18 @@ export interface AgentReply {
   tables: AgentTable[]
 }
 
+export interface AgentRunSnapshot {
+  id: string
+  status: 'running' | 'done' | 'error'
+  reply: string
+  provider: string
+  error: string | null
+  currentTool: string | null
+  steps: AgentStep[]
+  tables: AgentTable[]
+  pendingActions: AgentPendingAction[]
+}
+
 export interface AgentExecuteResult {
   tool: string
   success: boolean
@@ -49,6 +62,12 @@ export const agentApi = {
       method: 'POST',
       body: { message, history: history.slice(-8) },
     }),
+  startRun: (message: string, history: AgentMessage[]) =>
+    apiRequest<{ runId: string }>('/api/admin/agent/runs', {
+      method: 'POST',
+      body: { message, history: history.slice(-8) },
+    }),
+  runSnapshot: (runId: string) => apiRequest<AgentRunSnapshot>(`/api/admin/agent/runs/${runId}`),
   execute: (actions: AgentPendingAction[]) =>
     apiRequest<{ results: AgentExecuteResult[] }>('/api/admin/agent/execute', {
       method: 'POST',

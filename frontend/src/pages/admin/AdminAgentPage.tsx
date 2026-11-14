@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { App as AntApp, Button, Input, Table, Tag, Tooltip } from 'antd'
+import { App as AntApp, Button, Input, Spin, Table, Tag, Tooltip } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import { useMutation } from '@tanstack/react-query'
 import type {
@@ -11,6 +11,7 @@ import type {
 } from '@/api/agent'
 import { agentApi } from '@/api/agent'
 import { AppIcon } from '@/components/AppIcon'
+import { ApiError } from '@/lib/api'
 import { AdminPageHeader } from './AdminPageHeader'
 
 const EXAMPLES = [
@@ -19,6 +20,9 @@ const EXAMPLES = [
   '在「数据库」分类新建一道关于索引下推的题',
   '把视频 5 下线',
 ]
+
+const POLL_INTERVAL_MS = 600
+const MAX_POLLS = 100
 
 const TOOL_LABEL: Record<string, string> = {
   stats_overview: '数据概况',
@@ -44,13 +48,18 @@ const TOOL_ICON: Record<string, string> = {
   offline_video: 'lucide:archive',
 }
 
+/** 思考链中的一步：running 表示已发起、结果还没回来。 */
 interface Turn {
+  id: number
   role: 'user' | 'assistant'
   content: string
-  steps?: AgentStep[]
-  tables?: AgentTable[]
-  pending?: AgentPendingAction[]
+  steps: AgentStep[]
+  tables: AgentTable[]
+  pending: AgentPendingAction[]
   results?: AgentExecuteResult[]
+  streaming?: boolean
+  currentTool?: string | null
+  error?: string
 }
 
 function DataTable({ table }: { table: AgentTable }) {
@@ -73,112 +82,71 @@ function DataTable({ table }: { table: AgentTable }) {
         <strong>{table.title}</strong>
         <span className="mono">{table.rows.length} 行</span>
       </div>
-      <Table
-        size="small"
-        columns={columns}
-        dataSource={rows}
-        pagination={false}
-        scroll={{ x: 'max-content' }}
-      />
+      <Table size="small" columns={columns} dataSource={rows} pagination={false} scroll={{ x: 'max-content' }} />
     </div>
   )
 }
 
-function ThinkingChain({ steps }: { steps: AgentStep[] }) {
-  const [open, setOpen] = useState(false)
-  if (steps.length === 0) return null
+function ThinkingCard({ steps, streaming }: { steps: AgentStep[]; streaming: boolean }) {
+  const [open, setOpen] = useState(true)
+  if (steps.length === 0 && !streaming) return null
 
   return (
-    <div className={open ? 'agent-chain is-open' : 'agent-chain'}>
+    <div className={streaming ? 'agent-think is-live' : 'agent-think'}>
       <button
         type="button"
-        className="agent-chain__toggle"
+        className="agent-think__head"
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
       >
         <AppIcon icon={open ? 'lucide:chevron-down' : 'lucide:chevron-right'} size={14} />
-        <span>思考链 · {steps.length} 步</span>
-        <span className="agent-chain__tools mono">
-          {steps.map((step) => step.tool).join(' → ')}
-        </span>
+        <span className="agent-think__title">{streaming ? '正在思考…' : '思考过程'}</span>
+        {streaming && <span className="agent-think__pulse" aria-hidden="true" />}
+        <span className="agent-think__count mono">{steps.length} 步</span>
       </button>
 
       {open && (
-        <ol className="agent-chain__list">
+        <ol className="agent-think__list">
           {steps.map((step) => (
-            <li key={step.index}>
+            <li key={step.index} className={step.status === 'running' ? 'is-running' : ''}>
               <details>
                 <summary>
-                  <span className="agent-chain__index mono">{String(step.index).padStart(2, '0')}</span>
-                  <AppIcon icon={TOOL_ICON[step.tool] ?? 'lucide:wrench'} size={13} />
-                  <span className="agent-chain__name">{TOOL_LABEL[step.tool] ?? step.tool}</span>
-                  <Tag bordered={false} color={step.write ? 'gold' : 'default'} className="agent-chain__tag">
+                  <span className="agent-think__index mono">{String(step.index).padStart(2, '0')}</span>
+                  {step.status === 'running'
+                    ? <Spin size="small" />
+                    : <AppIcon icon={TOOL_ICON[step.tool] ?? 'lucide:wrench'} size={13} />}
+                  <span className="agent-think__name">{TOOL_LABEL[step.tool] ?? step.tool}</span>
+                  <Tag bordered={false} color={step.write ? 'gold' : 'default'} className="agent-think__tag">
                     {step.write ? '写' : '读'}
                   </Tag>
-                  {!step.success && <Tag bordered={false} color="red">失败</Tag>}
-                  <span className="agent-chain__time mono">{step.durationMs} ms</span>
+                  {step.status === 'done' && !step.success && <Tag bordered={false} color="red">失败</Tag>}
+                  <span className="agent-think__time mono">
+                    {step.status === 'running' ? '执行中' : `${step.durationMs} ms`}
+                  </span>
                 </summary>
-                <div className="agent-chain__detail">
+                <div className="agent-think__detail">
                   <div>
-                    <span className="agent-chain__label">参数</span>
+                    <span className="agent-think__label">参数</span>
                     <pre>{step.args || '{}'}</pre>
                   </div>
-                  <div>
-                    <span className="agent-chain__label">结果</span>
-                    <pre>{step.result}</pre>
-                  </div>
+                  {step.status === 'done' && (
+                    <div>
+                      <span className="agent-think__label">结果</span>
+                      <pre>{step.result}</pre>
+                    </div>
+                  )}
                 </div>
               </details>
             </li>
           ))}
+          {streaming && (
+            <li className="agent-think__waiting">
+              <span className="agent-think__dots"><span /><span /><span /></span>
+              <span>等待下一步…</span>
+            </li>
+          )}
         </ol>
       )}
-    </div>
-  )
-}
-
-function PendingActions({
-  actions,
-  busy,
-  onExecute,
-  onIgnore,
-}: {
-  actions: AgentPendingAction[]
-  busy: boolean
-  onExecute: () => void
-  onIgnore: () => void
-}) {
-  return (
-    <div className="agent-actions">
-      <p className="agent-actions__title">
-        <AppIcon icon="lucide:shield-alert" size={14} /> 待确认动作（{actions.length}）
-      </p>
-      <ul>
-        {actions.map((action, index) => (
-          <li key={`${action.tool}-${index}`}>
-            <span className="agent-actions__icon">
-              <AppIcon icon={TOOL_ICON[action.tool] ?? 'lucide:wrench'} size={15} />
-            </span>
-            <div>
-              <strong>{action.title}</strong>
-              <span>{action.summary}</span>
-            </div>
-            <Tag bordered={false} className="tag-plain mono">{action.tool}</Tag>
-          </li>
-        ))}
-      </ul>
-      <div className="agent-actions__foot">
-        <Button
-          type="primary"
-          size="small"
-          icon={<AppIcon icon="lucide:check" size={14} />}
-          loading={busy}
-          onClick={onExecute}
-        >
-          确认执行
-        </Button>
-        <Button size="small" onClick={onIgnore}>忽略</Button>
-      </div>
     </div>
   )
 }
@@ -187,7 +155,14 @@ export function AdminAgentPage() {
   const { message } = AntApp.useApp()
   const [input, setInput] = useState('')
   const [turns, setTurns] = useState<Turn[]>([])
+  const [busy, setBusy] = useState(false)
   const scrollRef = useRef<HTMLDivElement | null>(null)
+  const idRef = useRef(0)
+
+  const nextId = () => {
+    idRef.current += 1
+    return idRef.current
+  }
 
   const scrollToBottom = () => {
     window.setTimeout(() => {
@@ -196,56 +171,76 @@ export function AdminAgentPage() {
     }, 40)
   }
 
-  const chat = useMutation({
-    mutationFn: (text: string) => {
-      const history: AgentMessage[] = turns
-        .filter((turn) => turn.role === 'user' || (turn.role === 'assistant' && !turn.pending && !turn.results))
-        .map((turn) => ({ role: turn.role, content: turn.content }))
-      return agentApi.chat(text, history)
-    },
-    onSuccess: (result) => {
-      setTurns((current) => [
-        ...current,
-        {
-          role: 'assistant',
-          content: result.reply,
-          steps: result.steps,
-          tables: result.tables,
-          pending: result.pendingActions,
-        },
-      ])
-      scrollToBottom()
-    },
-    onError: (error) => {
-      message.error(error instanceof Error ? error.message : '智能体暂时不可用')
-      setTurns((current) => current.slice(0, -1))
-    },
-  })
+  const patchTurn = (id: number, patch: (turn: Turn) => Turn) => {
+    setTurns((current) => current.map((turn) => (turn.id === id ? patch(turn) : turn)))
+  }
 
   const execute = useMutation({
     mutationFn: (actions: AgentPendingAction[]) => agentApi.execute(actions),
     onSuccess: (data, actions) => {
       setTurns((current) => [
         ...current.map((turn) =>
-          turn.pending && turn.pending === actions ? { ...turn, pending: undefined } : turn,
+          turn.pending === actions ? { ...turn, pending: [] } : turn,
         ),
-        { role: 'assistant', content: '执行结果', results: data.results },
+        { id: nextId(), role: 'assistant', content: '', steps: [], tables: [], pending: [], results: data.results },
       ])
       const failed = data.results.filter((item) => !item.success).length
       if (failed === 0) message.success('已执行完成')
-      else message.warning(`${failed} 个动作执行失败，请查看结果`)
+      else message.warning(`${failed} 个动作执行失败`)
       scrollToBottom()
     },
     onError: (error) => message.error(error instanceof Error ? error.message : '执行失败'),
   })
 
-  const submit = (text: string) => {
+  const submit = async (text: string) => {
     const trimmed = text.trim()
-    if (!trimmed || chat.isPending) return
-    setTurns((current) => [...current, { role: 'user', content: trimmed }])
+    if (!trimmed || busy) return
+
+    const history: AgentMessage[] = turns
+      .filter((turn) => !turn.results)
+      .map((turn) => ({ role: turn.role, content: turn.content }))
+      .filter((item) => item.content.trim().length > 0)
+
+    const assistantId = nextId()
+    setTurns((current) => [
+      ...current,
+      { id: nextId(), role: 'user', content: trimmed, steps: [], tables: [], pending: [] },
+      { id: assistantId, role: 'assistant', content: '', steps: [], tables: [], pending: [], streaming: true },
+    ])
     setInput('')
-    chat.mutate(trimmed)
+    setBusy(true)
     scrollToBottom()
+
+    try {
+      const { runId } = await agentApi.startRun(trimmed, history)
+      let finished = false
+      for (let attempt = 0; attempt < MAX_POLLS && !finished; attempt += 1) {
+        await new Promise((resolve) => window.setTimeout(resolve, POLL_INTERVAL_MS))
+        const snapshot = await agentApi.runSnapshot(runId)
+        patchTurn(assistantId, (turn) => ({
+          ...turn,
+          steps: snapshot.steps,
+          tables: snapshot.tables,
+          currentTool: snapshot.currentTool,
+          content: snapshot.reply || turn.content,
+          streaming: snapshot.status === 'running',
+          pending: snapshot.status === 'done' ? snapshot.pendingActions : turn.pending,
+          error: snapshot.error ?? undefined,
+        }))
+        scrollToBottom()
+        if (snapshot.status !== 'running') finished = true
+      }
+      if (!finished) {
+        patchTurn(assistantId, (turn) => ({ ...turn, streaming: false, error: '任务超时，请稍后重试。' }))
+      }
+    } catch (error) {
+      const text = error instanceof ApiError || error instanceof Error ? error.message : '智能体暂时不可用'
+      patchTurn(assistantId, (turn) => ({ ...turn, streaming: false, error: text }))
+    } finally {
+      setBusy(false)
+      patchTurn(assistantId, (turn) => (turn.streaming ? { ...turn, streaming: false } : turn))
+      scrollToBottom()
+    }
   }
 
   return (
@@ -253,7 +248,7 @@ export function AdminAgentPage() {
       <AdminPageHeader
         eyebrow="AI / AGENT"
         title="AI 智能体"
-        description="用自然语言查询与维护数据。只读查询直接执行并展示结构化表格；写操作先列出待确认动作，确认后才落库并记审计。展开「思考链」可查看每一步工具调用。"
+        description="用自然语言查询与维护数据。思考过程会实时展开，最终结论单独成卡；写操作需二次确认后才会落库并记审计。"
       />
 
       <div className="agent-console">
@@ -266,56 +261,90 @@ export function AdminAgentPage() {
               <h2>试试这样问</h2>
               <div className="agent-console__examples">
                 {EXAMPLES.map((text) => (
-                  <button key={text} type="button" onClick={() => submit(text)}>{text}</button>
+                  <button key={text} type="button" onClick={() => void submit(text)}>{text}</button>
                 ))}
               </div>
             </div>
           )}
 
-          {turns.map((turn, index) => (
-            <div key={index} className={`agent-turn is-${turn.role}`}>
+          {turns.map((turn) => (
+            <div key={turn.id} className={`agent-turn is-${turn.role}`}>
               <span className="agent-turn__role">{turn.role === 'user' ? '你' : '智能体'}</span>
-              <div className="agent-turn__body">
-                <p className="agent-turn__text">{turn.content}</p>
 
-                {turn.tables?.map((table, tableIndex) => (
-                  <DataTable key={tableIndex} table={table} />
-                ))}
+              {turn.role === 'user' && <div className="agent-turn__body"><p className="agent-turn__text">{turn.content}</p></div>}
 
-                {turn.results && turn.results.length > 0 && (
-                  <ul className="agent-results">
-                    {turn.results.map((result, resultIndex) => (
-                      <li key={resultIndex} className={result.success ? 'is-ok' : 'is-fail'}>
-                        <AppIcon icon={result.success ? 'lucide:check-circle-2' : 'lucide:x-circle'} size={14} />
-                        <span className="mono">{TOOL_LABEL[result.tool] ?? result.tool}</span>
-                        <span>{result.message}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+              {turn.role === 'assistant' && (
+                <>
+                  <ThinkingCard steps={turn.steps} streaming={Boolean(turn.streaming)} />
 
-                {turn.pending && turn.pending.length > 0 && (
-                  <PendingActions
-                    actions={turn.pending}
-                    busy={execute.isPending}
-                    onExecute={() => execute.mutate(turn.pending!)}
-                    onIgnore={() => setTurns((current) =>
-                      current.map((item, i) => (i === index ? { ...item, pending: undefined } : item)),
-                    )}
-                  />
-                )}
+                  {(turn.content || turn.tables.length > 0 || turn.pending.length > 0 || turn.results || turn.error) && (
+                    <div className="agent-result">
+                      <div className="agent-result__head">
+                        <AppIcon icon="lucide:sparkles" size={14} />
+                        <strong>结论</strong>
+                      </div>
 
-                {turn.steps && turn.steps.length > 0 && <ThinkingChain steps={turn.steps} />}
-              </div>
+                      {turn.error && <p className="agent-result__error">{turn.error}</p>}
+                      {turn.content && <p className="agent-turn__text">{turn.content}</p>}
+
+                      {turn.tables.map((table, index) => <DataTable key={index} table={table} />)}
+
+                      {turn.results && turn.results.length > 0 && (
+                        <ul className="agent-results">
+                          {turn.results.map((result, index) => (
+                            <li key={index} className={result.success ? 'is-ok' : 'is-fail'}>
+                              <AppIcon icon={result.success ? 'lucide:check-circle-2' : 'lucide:x-circle'} size={14} />
+                              <span className="mono">{TOOL_LABEL[result.tool] ?? result.tool}</span>
+                              <span>{result.message}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+
+                      {turn.pending.length > 0 && (
+                        <div className="agent-actions">
+                          <p className="agent-actions__title">
+                            <AppIcon icon="lucide:shield-alert" size={14} /> 待确认动作（{turn.pending.length}）
+                          </p>
+                          <ul>
+                            {turn.pending.map((action, index) => (
+                              <li key={`${action.tool}-${index}`}>
+                                <span className="agent-actions__icon">
+                                  <AppIcon icon={TOOL_ICON[action.tool] ?? 'lucide:wrench'} size={15} />
+                                </span>
+                                <div>
+                                  <strong>{action.title}</strong>
+                                  <span>{action.summary}</span>
+                                </div>
+                                <Tag bordered={false} className="tag-plain mono">{action.tool}</Tag>
+                              </li>
+                            ))}
+                          </ul>
+                          <div className="agent-actions__foot">
+                            <Button
+                              type="primary"
+                              size="small"
+                              icon={<AppIcon icon="lucide:check" size={14} />}
+                              loading={execute.isPending}
+                              onClick={() => execute.mutate(turn.pending)}
+                            >
+                              确认执行
+                            </Button>
+                            <Button
+                              size="small"
+                              onClick={() => patchTurn(turn.id, (item) => ({ ...item, pending: [] }))}
+                            >
+                              忽略
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           ))}
-
-          {chat.isPending && (
-            <div className="agent-turn is-assistant">
-              <span className="agent-turn__role">智能体</span>
-              <div className="agent-turn__body agent-turn__body--typing"><span /><span /><span /></div>
-            </div>
-          )}
         </div>
 
         <div className="agent-console__composer">
@@ -323,7 +352,7 @@ export function AdminAgentPage() {
             value={input}
             onChange={(event) => setInput(event.target.value)}
             onPressEnter={(event) => {
-              if (!event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); submit(input) }
+              if (!event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); void submit(input) }
             }}
             autoSize={{ minRows: 2, maxRows: 5 }}
             maxLength={2000}
@@ -337,9 +366,9 @@ export function AdminAgentPage() {
             <Button
               type="primary"
               icon={<AppIcon icon="lucide:arrow-up" size={16} />}
-              loading={chat.isPending}
-              disabled={!input.trim()}
-              onClick={() => submit(input)}
+              loading={busy}
+              disabled={!input.trim() || busy}
+              onClick={() => void submit(input)}
             >
               发送
             </Button>

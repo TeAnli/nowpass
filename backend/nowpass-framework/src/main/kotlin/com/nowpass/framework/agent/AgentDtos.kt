@@ -24,6 +24,7 @@ data class AgentStep(
     val result: String,
     val durationMs: Int,
     val success: Boolean = true,
+    val status: String = "done",
 )
 
 /** 结构化表格，前端用表格组件渲染，不走 Markdown。 */

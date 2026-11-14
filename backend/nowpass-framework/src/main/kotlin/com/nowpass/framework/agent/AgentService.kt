@@ -19,6 +19,8 @@ import com.nowpass.system.service.QuestionService
 import com.nowpass.system.service.SysUserService
 import org.slf4j.LoggerFactory
 import org.springframework.http.client.JdkClientHttpRequestFactory
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.core.task.TaskExecutor
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.client.RestClient
@@ -43,6 +45,8 @@ class AgentService(
     private val sysUserService: SysUserService,
     private val agentActionLogDao: AgentActionLogDao,
     private val objectMapper: ObjectMapper,
+    private val runStore: AgentRunStore,
+    @Qualifier("applicationTaskExecutor") private val taskExecutor: TaskExecutor,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
     private val httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build()
@@ -50,7 +54,88 @@ class AgentService(
         .requestFactory(JdkClientHttpRequestFactory(httpClient).apply { setReadTimeout(Duration.ofSeconds(40)) })
         .build()
 
-    fun chat(message: String, history: List<AgentMessage>, userId: Long, operator: String): AgentReply {
+    fun chat(message: String, history: List<AgentMessage>, userId: Long, operator: String): AgentReply =
+        run(message, history, userId, operator, null)
+
+    /**
+     * 后台运行 + 轮询：立即返回 runId，前端按 500~800ms 轮询读取思考进度。
+     *
+     * 相比 SSE，轮询不依赖代理是否关闭缓冲，部署环境更稳。
+     */
+    fun startRun(message: String, history: List<AgentMessage>, userId: Long, operator: String): String {
+        val run = runStore.create(userId)
+        taskExecutor.execute {
+            try {
+                val result = run(message, history, userId, operator) { event, data ->
+                    applyEvent(run, event, data)
+                }
+                run.complete(result)
+            } catch (exception: Exception) {
+                log.warn("智能体后台运行失败：{}", exception.javaClass.simpleName)
+                run.fail("智能体暂时不可用，请稍后重试。")
+            }
+        }
+        return run.id
+    }
+
+    fun runSnapshot(runId: String, userId: Long): AgentRunSnapshot =
+        runStore.get(runId, userId)?.snapshot()
+            ?: throw ServiceException(ErrorCode.NOT_FOUND, "任务不存在或已过期")
+
+    private fun applyEvent(run: AgentRun, event: String, data: Any) {
+        when (event) {
+            "step" -> {
+                val map = data as? Map<*, *> ?: return
+                val index = (map["index"] as? Number)?.toInt() ?: return
+                val round = (map["round"] as? Number)?.toInt() ?: 1
+                val tool = map["tool"]?.toString().orEmpty()
+                val write = map["write"] == true
+                val args = map["args"]?.toString().orEmpty()
+                if (map["status"]?.toString() == "running") {
+                    run.startStep(index, round, tool, write, args)
+                } else {
+                    run.finishStep(
+                        AgentStep(
+                            index = index,
+                            round = round,
+                            tool = tool,
+                            write = write,
+                            args = args,
+                            result = map["result"]?.toString().orEmpty(),
+                            durationMs = (map["durationMs"] as? Number)?.toInt() ?: 0,
+                            success = map["success"] as? Boolean ?: true,
+                            status = "done",
+                        ),
+                    )
+                }
+            }
+            "table" -> (data as? AgentTable)?.let(run::addTable)
+            "error" -> run.fail((data as? Map<*, *>)?.get("message")?.toString() ?: "智能体暂时不可用")
+        }
+    }
+
+    /**
+     * 流式版本：每开始/结束一个工具调用、每拿到一张表格或一个待确认动作就回调一次，
+     * 让前端可以边思考边展示。回调抛错不应影响主流程，因此统一 runCatching。
+     */
+    fun chatStreaming(
+        message: String,
+        history: List<AgentMessage>,
+        userId: Long,
+        operator: String,
+        emit: (String, Any) -> Unit,
+    ): AgentReply {
+        val safeEmit: (String, Any) -> Unit = { event, data -> runCatching { emit(event, data) } }
+        return run(message, history, userId, operator, safeEmit)
+    }
+
+    private fun run(
+        message: String,
+        history: List<AgentMessage>,
+        userId: Long,
+        operator: String,
+        emit: ((String, Any) -> Unit)?,
+    ): AgentReply {
         val text = message.trim().take(MAX_MESSAGE_CHARS)
         if (text.isEmpty()) return AgentReply("请说明你想做什么。", "local")
 
@@ -75,6 +160,7 @@ class AgentService(
             var round = 0
             while (round < MAX_ROUNDS) {
                 round += 1
+                emit?.invoke("thinking", mapOf("round" to round))
                 val body = mapOf(
                     "model" to properties.interview.model,
                     "temperature" to 0.2,
@@ -103,6 +189,18 @@ class AgentService(
                     val args = parseArgs(rawArgs)
                     val callId = call.path("id").asText()
                     val callStartedAt = System.currentTimeMillis()
+                    val stepIndex = steps.size + 1
+                    emit?.invoke(
+                        "step",
+                        mapOf(
+                            "index" to stepIndex,
+                            "round" to round,
+                            "tool" to name,
+                            "write" to (name in WRITE_TOOLS),
+                            "args" to rawArgs.take(2000),
+                            "status" to "running",
+                        ),
+                    )
 
                     val resultText = when {
                         name in WRITE_TOOLS -> {
@@ -113,7 +211,10 @@ class AgentService(
                         }
                         name == TOOL_PRESENT_TABLE -> {
                             val table = buildTable(args)
-                            if (table != null) tables += table
+                            if (table != null) {
+                                tables += table
+                                emit?.invoke("table", table)
+                            }
                             table?.let { "已展示表格「${it.title}」，共 ${it.rows.size} 行。" }
                                 ?: "表格参数不完整，未展示。"
                         }
@@ -121,15 +222,31 @@ class AgentService(
                             .getOrElse { "工具 $name 执行失败：${it.message}" }
                     }
 
-                    steps += AgentStep(
-                        index = steps.size + 1,
+                    val success = !resultText.startsWith("工具 $name 执行失败")
+                    val step = AgentStep(
+                        index = stepIndex,
                         round = round,
                         tool = name,
                         write = name in WRITE_TOOLS,
                         args = rawArgs.take(2000),
                         result = resultText.take(2000),
                         durationMs = (System.currentTimeMillis() - callStartedAt).toInt(),
-                        success = !resultText.startsWith("工具 $name 执行失败"),
+                        success = success,
+                    )
+                    steps += step
+                    emit?.invoke(
+                        "step",
+                        mapOf(
+                            "index" to step.index,
+                            "round" to step.round,
+                            "tool" to step.tool,
+                            "write" to step.write,
+                            "args" to step.args,
+                            "result" to step.result,
+                            "durationMs" to step.durationMs,
+                            "success" to step.success,
+                            "status" to "done",
+                        ),
                     )
                     messages += mapOf(
                         "role" to "tool",
@@ -140,10 +257,13 @@ class AgentService(
             }
             if (reply.isBlank()) reply = "已达到工具调用上限，请把任务拆小一些再试。"
             recordUsage(text, reply, true, (System.currentTimeMillis() - startedAt).toInt(), userId)
-            return AgentReply(reply, providerName(), pending, steps, tables)
+            val result = AgentReply(reply, providerName(), pending, steps, tables)
+            emit?.invoke("result", result)
+            return result
         } catch (exception: Exception) {
             log.warn("AI 智能体调用失败：{}", exception.javaClass.simpleName)
             recordUsage(text, "", false, (System.currentTimeMillis() - startedAt).toInt(), userId)
+            emit?.invoke("error", mapOf("message" to "智能体暂时不可用，请稍后重试。"))
             return AgentReply("智能体暂时不可用，请稍后重试，或直接使用左侧常规管理页面。", "local-fallback")
         }
     }

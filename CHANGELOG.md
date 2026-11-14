@@ -10,6 +10,18 @@
 - 前端真实接口联调（需先启动 `pnpm docker:up`）
 - 生产部署时将 `frontend/dist` 打包进后端静态资源
 
+## [0.33.1] - 2026-11-14
+
+### 修复
+- SSE 请求报 `network error`：Spring Security 在异步请求的 `ASYNC` 派发阶段拿不到 SecurityContext，判定 `Access Denied`；此时响应已提交，只能掐断连接
+- `SecurityConfig` 放行 `DispatcherType.ASYNC` 与 `ERROR`，首次请求仍走完整鉴权
+
+### 验证
+- nginx 不再出现 `upstream prematurely closed connection`
+- 经代理 curl 逐条收到事件：242ms / 2193ms / 4123ms / 4826ms，退出码 0
+- 真实浏览器（CDP）：2 秒时 `steps=2, live=true`，8 秒时 `steps=3, result=true, table=true, err=null`
+- 后端 `clean build` 通过，容器 healthy
+
 ## [0.33.0] - 2026-11-14
 
 ### 变更

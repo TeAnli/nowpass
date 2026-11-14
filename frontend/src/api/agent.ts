@@ -1,4 +1,4 @@
-import { apiRequest } from '@/lib/api'
+import { apiRequest, apiStream } from '@/lib/api'
 
 export interface AgentMessage {
   role: 'user' | 'assistant'
@@ -67,6 +67,17 @@ export const agentApi = {
       method: 'POST',
       body: { message, history: history.slice(-8) },
     }),
+  stream: (
+    message: string,
+    history: AgentMessage[],
+    onEvent: (event: string, data: unknown) => void,
+    signal?: AbortSignal,
+  ) =>
+    apiStream(
+      '/api/admin/agent/stream',
+      { method: 'POST', body: { message, history: history.slice(-8) }, signal },
+      onEvent,
+    ),
   runSnapshot: (runId: string) => apiRequest<AgentRunSnapshot>(`/api/admin/agent/runs/${runId}`),
   execute: (actions: AgentPendingAction[]) =>
     apiRequest<{ results: AgentExecuteResult[] }>('/api/admin/agent/execute', {

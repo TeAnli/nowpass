@@ -264,10 +264,13 @@ AI 管理（需权限点 `ai:view` / `ai:edit`）：
 
 | 方法 | 路径 | 权限 | 说明 |
 |---|---|---|---|
-| POST | `/api/admin/agent/runs` | `ai:view` | 提交任务，body `{message, history}`，返回 `{runId}` |
-| GET | `/api/admin/agent/runs/{id}` | `ai:view` | 轮询进度：状态、思考步骤、表格、待确认动作、结论 |
+| POST | `/api/admin/agent/stream` | `ai:view` | **主链路**：SSE 逐步推送 `thinking` / `step` / `table` / `result` / `error` |
+| POST | `/api/admin/agent/runs` | `ai:view` | 备用：提交任务返回 `{runId}` |
+| GET | `/api/admin/agent/runs/{id}` | `ai:view` | 备用：轮询进度 |
 | POST | `/api/admin/agent/chat` | `ai:view` | 同步返回完整结果，供脚本或调试使用 |
 | POST | `/api/admin/agent/execute` | `ai:edit` | 执行待确认动作，逐条写审计 |
+
+SSE 注意点：响应带 `X-Accel-Buffering: no`，并先发一个注释包（`:open`）让反向代理立即进入流式转发；OpenResty 侧对 `/api/admin/agent/stream` 单独关闭 `proxy_buffering`。
 
 工具集：
 

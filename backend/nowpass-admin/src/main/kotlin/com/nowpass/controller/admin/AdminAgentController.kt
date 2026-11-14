@@ -1,5 +1,6 @@
 package com.nowpass.controller.admin
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.nowpass.common.annotation.RateLimiter
 import com.nowpass.common.constant.Permissions
 import com.nowpass.common.enums.LimitType
@@ -16,6 +17,11 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Size
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.core.task.TaskExecutor
+import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -23,6 +29,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 
 data class AgentChatRequest(
     @field:NotBlank(message = "请输入指令")
@@ -40,6 +47,8 @@ data class AgentExecuteRequest(
 
 data class AgentRunStarted(val runId: String)
 
+private const val STREAM_TIMEOUT_MS = 180_000L
+
 /**
  * AI 智能体：用自然语言查询与操作后台数据。
  *
@@ -52,7 +61,11 @@ data class AgentRunStarted(val runId: String)
 @RequestMapping("/api/admin/agent")
 class AdminAgentController(
     private val agentService: AgentService,
+    private val objectMapper: ObjectMapper,
+    @Qualifier("applicationTaskExecutor") private val taskExecutor: TaskExecutor,
 ) {
+
+    private val log = LoggerFactory.getLogger(javaClass)
 
     @Operation(summary = "提交智能体任务", description = "立即返回 runId，思考过程通过轮询获取")
     @PreAuthorize("hasAuthority('${Permissions.AI_VIEW}')")
@@ -77,6 +90,39 @@ class AdminAgentController(
     fun chat(@Valid @RequestBody request: AgentChatRequest): R<AgentReply> {
         val current = SecurityUtils.currentUser()
         return R.ok(agentService.chat(request.message, request.history, current.userId, current.username))
+    }
+
+    @Operation(summary = "流式对话", description = "SSE 逐步推送思考过程；写操作仍返回待确认动作")
+    @PreAuthorize("hasAuthority('${Permissions.AI_VIEW}')")
+    @RateLimiter(key = "agent:stream", time = 60, count = 20, limitType = LimitType.IP_AND_USER)
+    @PostMapping("/stream", produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
+    fun stream(@Valid @RequestBody request: AgentChatRequest): ResponseEntity<SseEmitter> {
+        val current = SecurityUtils.currentUser()
+        val emitter = SseEmitter(STREAM_TIMEOUT_MS)
+        emitter.onTimeout { runCatching { emitter.complete() } }
+        emitter.onError { runCatching { emitter.complete() } }
+
+        taskExecutor.execute {
+            try {
+                // 先发一个注释包，让代理立刻进入流式转发，避免首包被缓冲
+                emitter.send(SseEmitter.event().comment("open"))
+                agentService.chatStreaming(request.message, request.history, current.userId, current.username) { event, data ->
+                    val json = objectMapper.writeValueAsString(data)
+                    log.debug("SSE emit event={} bytes={}", event, json.length)
+                    emitter.send(SseEmitter.event().name(event).data(json, MediaType.APPLICATION_JSON))
+                }
+                emitter.complete()
+            } catch (exception: Exception) {
+                log.warn("SSE 推送失败：{}", exception.javaClass.simpleName)
+                runCatching { emitter.completeWithError(exception) }
+            }
+        }
+
+        return ResponseEntity.ok()
+            .contentType(MediaType.TEXT_EVENT_STREAM)
+            .header("X-Accel-Buffering", "no")
+            .header("Cache-Control", "no-cache, no-transform")
+            .body(emitter)
     }
 
     @Operation(summary = "执行待确认动作", description = "需要 ai:edit 权限，逐条执行并写审计日志")

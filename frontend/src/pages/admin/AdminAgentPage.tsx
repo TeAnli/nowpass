@@ -6,6 +6,7 @@ import type {
   AgentExecuteResult,
   AgentMessage,
   AgentPendingAction,
+  AgentReply,
   AgentStep,
   AgentTable,
 } from '@/api/agent'
@@ -20,9 +21,6 @@ const EXAMPLES = [
   '在「数据库」分类新建一道关于索引下推的题',
   '把视频 5 下线',
 ]
-
-const POLL_INTERVAL_MS = 600
-const MAX_POLLS = 100
 
 const TOOL_LABEL: Record<string, string> = {
   stats_overview: '数据概况',
@@ -212,27 +210,41 @@ export function AdminAgentPage() {
     scrollToBottom()
 
     try {
-      const { runId } = await agentApi.startRun(trimmed, history)
-      let finished = false
-      for (let attempt = 0; attempt < MAX_POLLS && !finished; attempt += 1) {
-        await new Promise((resolve) => window.setTimeout(resolve, POLL_INTERVAL_MS))
-        const snapshot = await agentApi.runSnapshot(runId)
-        patchTurn(assistantId, (turn) => ({
-          ...turn,
-          steps: snapshot.steps,
-          tables: snapshot.tables,
-          currentTool: snapshot.currentTool,
-          content: snapshot.reply || turn.content,
-          streaming: snapshot.status === 'running',
-          pending: snapshot.status === 'done' ? snapshot.pendingActions : turn.pending,
-          error: snapshot.error ?? undefined,
-        }))
+      await agentApi.stream(trimmed, history, (event, data) => {
+        if (event === 'step') {
+          const payload = data as AgentStep
+          patchTurn(assistantId, (turn) => {
+            const exists = turn.steps.some((step) => step.index === payload.index)
+            return {
+              ...turn,
+              currentTool: payload.status === 'running' ? payload.tool : null,
+              steps: exists
+                ? turn.steps.map((step) => (step.index === payload.index ? payload : step))
+                : [...turn.steps, payload],
+            }
+          })
+        } else if (event === 'table') {
+          patchTurn(assistantId, (turn) => ({ ...turn, tables: [...turn.tables, data as AgentTable] }))
+        } else if (event === 'result') {
+          const payload = data as AgentReply
+          patchTurn(assistantId, (turn) => ({
+            ...turn,
+            content: payload.reply,
+            tables: payload.tables?.length ? payload.tables : turn.tables,
+            pending: payload.pendingActions ?? [],
+            streaming: false,
+            currentTool: null,
+          }))
+        } else if (event === 'error') {
+          const payload = data as { message?: string }
+          patchTurn(assistantId, (turn) => ({
+            ...turn,
+            streaming: false,
+            error: payload.message ?? '智能体暂时不可用',
+          }))
+        }
         scrollToBottom()
-        if (snapshot.status !== 'running') finished = true
-      }
-      if (!finished) {
-        patchTurn(assistantId, (turn) => ({ ...turn, streaming: false, error: '任务超时，请稍后重试。' }))
-      }
+      })
     } catch (error) {
       const text = error instanceof ApiError || error instanceof Error ? error.message : '智能体暂时不可用'
       patchTurn(assistantId, (turn) => ({ ...turn, streaming: false, error: text }))

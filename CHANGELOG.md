@@ -10,6 +10,20 @@
 - 前端真实接口联调（需先启动 `pnpm docker:up`）
 - 生产部署时将 `frontend/dist` 打包进后端静态资源
 
+## [0.33.0] - 2026-11-14
+
+### 变更
+- 智能体恢复 SSE 流式对话（`POST /api/admin/agent/stream`），前端按事件实时渲染思考过程
+- SSE 响应加 `X-Accel-Buffering: no` 与首包注释心跳，避免反代缓冲导致事件延迟
+- 轮询接口 `runs` 保留作为备用，不影响 SSE 主链路
+- SSE 事件推送降为 debug 日志，避免刷屏
+
+### 验证
+- 真实浏览器（CDP，非虚拟时间）实测：点击后 1 秒显示「正在思考…」，7 秒后 2 步完成、表格与结论卡出现
+- `docker logs` 确认服务端逐条 emit：comment → thinking → step → step → table → result
+- 前端 typecheck / lint / build 通过，后端 `clean build`（含单测）通过
+- 容器 healthy
+
 ## [0.32.0] - 2026-11-14
 
 ### 新增

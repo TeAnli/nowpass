@@ -48,6 +48,9 @@ const AdminVideosPage = lazy(() =>
 const AdminAiPage = lazy(() =>
   import('@/pages/admin/AdminAiPage').then((module) => ({ default: module.AdminAiPage })),
 )
+const AdminAgentPage = lazy(() =>
+  import('@/pages/admin/AdminAgentPage').then((module) => ({ default: module.AdminAgentPage })),
+)
 const AdminVideoCategoriesPage = lazy(() =>
   import('@/pages/admin/AdminVideoCategoriesPage').then((module) => ({ default: module.AdminVideoCategoriesPage })),
 )
@@ -129,6 +132,7 @@ export default function App() {
                     <Route path="videos" element={<AdminVideosPage />} />
                     <Route path="video-categories" element={<AdminVideoCategoriesPage />} />
                     <Route path="ai" element={<AdminAiPage />} />
+                    <Route path="agent" element={<AdminAgentPage />} />
                     <Route path="users" element={<AdminUsersPage />} />
                     <Route path="online" element={<AdminOnlinePage />} />
                     <Route path="logs" element={<AdminLogsPage />} />

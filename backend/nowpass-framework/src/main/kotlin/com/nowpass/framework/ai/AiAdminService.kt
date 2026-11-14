@@ -77,6 +77,7 @@ class AiAdminService(
     companion object {
         const val PROMPT_INTERVIEW_SYSTEM = "interview_system"
         const val PROMPT_SUPPORT_SYSTEM = "support_system"
+        const val PROMPT_AGENT_SYSTEM = "agent_system"
         private const val MAX_PROMPT_CHARS = 8000
     }
 }

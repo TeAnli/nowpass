@@ -32,6 +32,7 @@
 | `interview_message` | 面试对话 | 按 id 升序还原对话 |
 | `ai_prompt` | AI 提示词模板 | `{占位符}` 由服务端渲染 |
 | `ai_usage_log` | AI 调用用量 | 场景、模型、字数、耗时 |
+| `agent_action_log` | 智能体写操作审计 | 谁在何时执行了什么工具 |
 
 ## 3. 关键字段说明
 

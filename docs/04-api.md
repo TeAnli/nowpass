@@ -258,7 +258,35 @@ AI 管理（需权限点 `ai:view` / `ai:edit`）：
 
 提示词 key：`interview_system`（AI 面试官）、`support_system`（AI 客服）。占位符由服务端渲染，面试官支持 `{questionTitle}`、`{questionContent}`、`{answer}`，客服支持 `{knowledge}`。
 
-## 10. 视频讲解
+## 10. AI 智能体
+
+用自然语言查询与维护后台数据，需要 `ai:view` 读、`ai:edit` 写。
+
+| 方法 | 路径 | 权限 | 说明 |
+|---|---|---|---|
+| POST | `/api/admin/agent/chat` | `ai:view` | body `{message, history}`，返回 `{reply, provider, pendingActions}` |
+| POST | `/api/admin/agent/execute` | `ai:edit` | body `{actions}`，逐条执行并写审计 |
+
+工具集：
+
+| 工具 | 类型 | 作用 |
+|---|---|---|
+| `stats_overview` | 只读 | 题目、分类、视频、用户、AI 用量概况 |
+| `search_questions` | 只读 | 按关键词 / 分类名 / 难度搜索，返回 id 与标题 |
+| `list_categories` | 只读 | 分类及题量 |
+| `create_question` | 写 | 创建题目，需分类名或分类 id |
+| `delete_question` | 写 | 软删除题目 |
+| `create_category` | 写 | 新建分类 |
+| `publish_video` / `offline_video` | 写 | 视频上下线 |
+
+安全设计：
+
+- `chat` 只执行只读工具；写工具一律转成 `pendingActions` 返回，不落库
+- `execute` 才真正调用 service 层，逐条校验并写 `agent_action_log`
+- 单次对话最多 4 轮工具调用、最多 5 个待确认动作
+- 用量记录到 `ai_usage_log`，`scene=agent`
+
+## 11. 视频讲解
 
 用户端（登录后可用）：
 

@@ -10,6 +10,28 @@
 - 前端真实接口联调（需先启动 `pnpm docker:up`）
 - 生产部署时将 `frontend/dist` 打包进后端静态资源
 
+## [0.30.0] - 2026-11-14
+
+### 新增
+- 后台「AI 智能体」页 `/admin/agent`：用自然语言查询与维护数据
+- 工具集：`stats_overview`、`search_questions`、`list_categories`（只读）；`create_question`、`delete_question`、`create_category`、`publish_video`、`offline_video`（写）
+- 写操作两段式：对话只生成待确认动作，`/execute` 确认后才落库
+- `agent_action_log` 审计表：记录用户、工具、参数与结果
+- `V18__agent_admin.sql`：审计表、`agent` 用量场景、`agent_system` 提示词
+
+### 变更
+- `ai_usage_log` 场景约束扩展为 `interview` / `support` / `agent`
+- 智能体提示词可在 AI 管理页编辑
+
+### 验证
+- 后端 `clean build`（含单测）通过，V18 迁移成功
+- 只读：统计返回 131 题 / 43 分类；搜索正确返回题目 id
+- 写操作：对话只返回 1 条待确认动作，题库数量不变
+- 执行：返回 200「已创建题目 id=133」，题库 131 → 132，审计记录成功
+- 用量场景统计出现 `agent`
+- `/admin/agent` 渲染正常，后台导航含「AI 智能体」
+- 前端 typecheck / lint / build 通过，容器 healthy
+
 ## [0.29.0] - 2026-11-14
 
 ### 新增

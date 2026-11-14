@@ -2553,3 +2553,65 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .support-msg--typing span { animation: none; }
 }
+/* ---------- admin AI agent console ---------- */
+.agent-page { display: grid; gap: 14px; }
+.agent-console { display: grid; gap: 10px; }
+.agent-console__log {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 420px;
+  max-height: 58vh;
+  overflow-y: auto;
+  padding: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  scrollbar-width: thin;
+}
+.agent-console__empty { display: grid; justify-items: center; gap: 10px; margin: auto; text-align: center; }
+.agent-console__mark { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; background: var(--color-primary-soft); color: var(--color-primary); }
+.agent-console__empty h2 { margin: 0; font-family: var(--font-display); font-size: 1.05rem; }
+.agent-console__examples { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; max-width: 560px; }
+.agent-console__examples button { padding: 5px 11px; border: 1px solid var(--color-border); border-radius: 999px; background: transparent; color: var(--color-text-secondary); font-size: 11px; cursor: pointer; }
+.agent-console__examples button:hover { border-color: var(--color-primary); color: var(--color-primary); }
+
+.agent-turn { display: grid; gap: 4px; }
+.agent-turn__role { color: var(--color-text-muted); font-size: 10px; }
+.agent-turn__body { max-width: 88%; padding: 10px 13px; border-radius: 12px; font-size: 13px; line-height: 1.8; }
+.agent-turn.is-user { justify-items: end; }
+.agent-turn.is-user .agent-turn__body { background: var(--color-primary-soft); }
+.agent-turn.is-assistant .agent-turn__body { border: 1px solid var(--color-border); background: var(--color-surface-muted); }
+.agent-turn__body p { margin: 0; white-space: pre-wrap; }
+.agent-turn__body .markdown { font-size: 13px; line-height: 1.8; }
+.agent-turn__body--typing { display: flex; gap: 4px; padding: 14px; }
+.agent-turn__body--typing span { width: 5px; height: 5px; border-radius: 50%; background: var(--color-text-muted); animation: chat-dot 1s ease-in-out infinite; }
+.agent-turn__body--typing span:nth-child(2) { animation-delay: 0.15s; }
+.agent-turn__body--typing span:nth-child(3) { animation-delay: 0.3s; }
+
+.agent-actions { margin-top: 10px; padding: 10px 12px; border: 1px solid color-mix(in srgb, var(--color-warning) 40%, var(--color-border)); border-radius: 10px; background: var(--color-warning-soft); }
+.agent-actions__title { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; color: var(--color-warning); font-size: 11px; font-weight: 600; }
+.agent-actions ul { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.agent-actions li { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; padding: 7px 9px; border-radius: 8px; background: var(--color-surface); }
+.agent-actions li div { display: grid; gap: 2px; min-width: 0; }
+.agent-actions li strong { font-size: 12px; }
+.agent-actions li span { color: var(--color-text-muted); font-size: 11px; overflow-wrap: anywhere; }
+.agent-actions__foot { display: flex; gap: 8px; margin-top: 10px; }
+
+.agent-results { display: grid; gap: 4px; margin: 10px 0 0; padding: 0; list-style: none; }
+.agent-results li { display: flex; align-items: center; gap: 7px; font-size: 11px; }
+.agent-results li.is-ok { color: var(--color-primary); }
+.agent-results li.is-fail { color: var(--color-danger); }
+.agent-results li .mono { color: var(--color-text-muted); }
+
+.agent-console__composer { display: grid; gap: 8px; padding: 12px; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-surface); }
+.agent-console__composer .ant-input { font-size: 13px; }
+.agent-console__actions { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.agent-console__hint { display: inline-flex; align-items: center; gap: 5px; color: var(--color-text-muted); font-size: 10px; }
+@media (max-width: 640px) {
+  .agent-turn__body { max-width: 100%; }
+  .agent-console__log { max-height: 52vh; padding: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .agent-turn__body--typing span { animation: none; }
+}

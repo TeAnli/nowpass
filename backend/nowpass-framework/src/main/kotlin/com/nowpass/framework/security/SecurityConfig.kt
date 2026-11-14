@@ -3,6 +3,7 @@ package com.nowpass.framework.security
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.nowpass.common.exception.ErrorCode
 import com.nowpass.common.response.R
+import jakarta.servlet.DispatcherType
 import jakarta.servlet.http.HttpServletResponse
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Bean
@@ -52,6 +53,10 @@ class SecurityConfig(
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests { registry ->
                 registry
+                    // 异步请求（SSE / DeferredResult）完成后会以 ASYNC 派发再进一次过滤器链，
+                    // 此时 SecurityContext 为空，若不放行会被判 Access Denied 并掐断已提交的响应。
+                    // 首次请求已经过完整鉴权，这里放行派发类型是安全的。
+                    .dispatcherTypeMatchers(DispatcherType.ASYNC, DispatcherType.ERROR).permitAll()
                     .requestMatchers(
                         "/api/auth/captcha",
                         "/api/auth/login",
